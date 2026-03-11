@@ -16,7 +16,7 @@ npm install
 
 Edit these locally:
 
-- `config/chain.testnet.json` or `config/chain.mainnet.json`
+- `config/networks.testnet.json` or `config/networks.mainnet.json`
 - `.env.local`
 - `node.config.json`
 
@@ -48,8 +48,8 @@ npm run status
 Check:
 
 - wallet address is correct
-- RPC is correct
-- contract addresses are filled
+- at least one selected EVM network is healthy
+- contract addresses are filled on the networks you enabled
 - native balance is enough for gas
 - `OPENAI_API_KEY` exists if using OpenAI
 
@@ -64,7 +64,7 @@ This is the safest first runtime check.
 Use it to confirm:
 
 - config loads
-- chain connection works
+- network selection works
 - wallet signs
 - discovery roots are reachable
 - no immediate runtime errors appear
@@ -100,8 +100,9 @@ npm run status
 
 Check these first:
 
-- wrong chain profile
+- wrong network profile
 - empty contract addresses
+- no healthy selected EVM network
 - low native balance
 - bad wallet key or keyfile path
 - missing manifest or receipt files

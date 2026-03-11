@@ -1,5 +1,5 @@
 export type NodeRole = "provider" | "verifier" | "both";
-export type ChainProfileName = "testnet" | "mainnet";
+export type NetworkProfileName = "testnet" | "mainnet";
 export type JobTypeName = "Simple" | "General" | "Collective";
 export type JobStateName =
   | "Created"
@@ -11,11 +11,19 @@ export type JobStateName =
   | "Settled"
   | "Expired";
 export type InferenceBackendName = "ollama" | "openai";
+export type NetworkKind = "evm" | "solana";
+export type NetworkSelectionMode = "priority-failover" | "all-healthy";
+export type NetworkHealthStatus = "healthy" | "unhealthy" | "unsupported" | "disabled";
 
 export interface ChainConfig {
+  key: string;
+  label: string;
+  kind: "evm";
+  enabled: boolean;
+  priority: number;
+  rpcUrls: string[];
+  networkRef?: string;
   chainId: number;
-  rpcUrl: string;
-  backupRpcUrls: string[];
   explorerBaseUrl: string;
   confirmationsRequired: number;
   recommendedGasBufferNative: string;
@@ -30,10 +38,48 @@ export interface ChainConfig {
     rewardDistributor: string;
     token: string;
   };
+  manifestRoots?: string[];
+  receiptRoots?: string[];
+  artifactOutputDir?: string;
+}
+
+export interface SolanaNetworkConfig {
+  key: string;
+  label: string;
+  kind: "solana";
+  enabled: boolean;
+  priority: number;
+  rpcUrls: string[];
+  cluster: string;
+  explorerBaseUrl: string;
+  confirmationsRequired: number;
+  recommendedGasBufferNative: string;
+  nativeToken: {
+    type: string;
+    symbol: string;
+    address?: string;
+  };
+  programIds: {
+    registry: string;
+    verifier: string;
+    rewardDistributor: string;
+    tokenMint: string;
+  };
+  manifestRoots?: string[];
+  receiptRoots?: string[];
+  artifactOutputDir?: string;
+}
+
+export type NetworkConfig = ChainConfig | SolanaNetworkConfig;
+
+export interface NetworksProfile {
+  networks: NetworkConfig[];
 }
 
 export interface FileNodeConfig {
-  chainProfile: ChainProfileName;
+  networkProfile: NetworkProfileName;
+  selectionMode: NetworkSelectionMode;
+  enabledNetworks: string[];
   pollIntervalMs: number;
   manifestRoots: string[];
   receiptRoots: string[];
@@ -56,25 +102,95 @@ export interface FileNodeConfig {
   };
 }
 
+export interface RuntimeNetworkConfigBase {
+  key: string;
+  label: string;
+  kind: NetworkKind;
+  enabled: boolean;
+  priority: number;
+  manifestRoots: string[];
+  receiptRoots: string[];
+  artifactOutputDir: string;
+  rpcCandidates: string[];
+}
+
+export interface EvmRuntimeNetworkConfig extends RuntimeNetworkConfigBase {
+  kind: "evm";
+  chainId: number;
+  networkRef?: string;
+  explorerBaseUrl: string;
+  confirmationsRequired: number;
+  recommendedGasBufferNative: string;
+  nativeToken: {
+    type: string;
+    symbol: string;
+    address?: string;
+  };
+  contracts: {
+    registry: string;
+    verifier: string;
+    rewardDistributor: string;
+    token: string;
+  };
+}
+
+export interface SolanaRuntimeNetworkConfig extends RuntimeNetworkConfigBase {
+  kind: "solana";
+  cluster: string;
+  explorerBaseUrl: string;
+  confirmationsRequired: number;
+  recommendedGasBufferNative: string;
+  nativeToken: {
+    type: string;
+    symbol: string;
+    address?: string;
+  };
+  programIds: {
+    registry: string;
+    verifier: string;
+    rewardDistributor: string;
+    tokenMint: string;
+  };
+}
+
+export type RuntimeNetworkConfig = EvmRuntimeNetworkConfig | SolanaRuntimeNetworkConfig;
+
 export interface RuntimeConfig {
   repoRoot: string;
   role: NodeRole;
   walletPrivateKey: string;
   walletSource: "env" | "keyfile" | "missing";
-  chainProfile: ChainProfileName;
-  chain: ChainConfig;
+  networkProfile: NetworkProfileName;
+  selectionMode: NetworkSelectionMode;
+  networks: RuntimeNetworkConfig[];
   pollIntervalMs: number;
-  manifestRoots: string[];
-  receiptRoots: string[];
-  artifactOutputDir: string;
   stateDir: string;
   statePath: string;
-  rpcCandidates: string[];
-  selectedRpcUrl?: string;
   provider?: FileNodeConfig["provider"];
   verifier?: FileNodeConfig["verifier"];
   openAiApiKey?: string;
 }
+
+export interface HealthyEvmNetwork {
+  key: string;
+  label: string;
+  kind: "evm";
+  priority: number;
+  selectedRpcUrl: string;
+  rpcCandidates: string[];
+  network: EvmRuntimeNetworkConfig;
+}
+
+export interface PreparedSolanaNetwork {
+  key: string;
+  label: string;
+  kind: "solana";
+  priority: number;
+  network: SolanaRuntimeNetworkConfig;
+  reason: string;
+}
+
+export type ActiveNetwork = HealthyEvmNetwork | PreparedSolanaNetwork;
 
 export interface JobManifest {
   version: "koinara-job-manifest-v1";
@@ -138,6 +254,7 @@ export interface StoredNodeState {
     submittedJobs: Record<
       string,
       {
+        networkKey: string;
         txHash: string;
         responseHash: string;
         recordedAt: string;
@@ -148,11 +265,21 @@ export interface StoredNodeState {
     participatedJobs: Record<
       string,
       {
+        networkKey: string;
         action: string;
         txHash: string;
         recordedAt: string;
       }
     >;
   };
+  networkHealth: Record<
+    string,
+    {
+      status: NetworkHealthStatus;
+      selectedRpcUrl?: string;
+      lastCheckedAt: string;
+      lastError?: string;
+    }
+  >;
   lastRunAt?: string;
 }

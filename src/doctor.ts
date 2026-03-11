@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { formatEther, parseEther } from "ethers";
 import { buildContracts } from "./chain/client.js";
-import { resolveHealthyRpcUrl } from "./chain/rpc.js";
+import { inspectNetworks, selectedHealthyNetworks } from "./chain/networkSelection.js";
 import { loadRuntimeConfig } from "./config/loadConfig.js";
 
 async function main(): Promise<void> {
@@ -19,9 +19,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  if (!existsSync(config.artifactOutputDir)) {
-    warnings.push(`artifactOutputDir does not exist yet: ${config.artifactOutputDir}`);
-  }
   if (!existsSync(resolve(config.repoRoot, "node.config.json"))) {
     failures.push("node.config.json is missing");
   }
@@ -33,50 +30,73 @@ async function main(): Promise<void> {
     failures.push("verifier role is enabled but verifier config is missing");
   }
   if (!config.walletPrivateKey) {
-    warnings.push("wallet is not configured yet; set WALLET_PRIVATE_KEY or WALLET_KEYFILE before running the node");
+    warnings.push(
+      "wallet is not configured yet; set WALLET_PRIVATE_KEY or WALLET_KEYFILE before running the node"
+    );
   }
   if (config.provider?.backend === "openai" && !config.openAiApiKey) {
     warnings.push("provider backend is openai but OPENAI_API_KEY is not set");
   }
-  if (config.chain.chainId === 0) {
-    failures.push("chainId is still 0");
-  }
-  if (
-    !config.chain.contracts.registry ||
-    !config.chain.contracts.verifier ||
-    !config.chain.contracts.rewardDistributor ||
-    !config.chain.contracts.token
-  ) {
-    failures.push("chain config is missing one or more contract addresses");
+  if (config.networks.length === 0) {
+    failures.push("no networks are configured");
   }
 
-  if (config.rpcCandidates.length === 0) {
-    failures.push("no RPC candidates are configured");
-  } else {
-    try {
-      const rpcUrl = await resolveHealthyRpcUrl(config.rpcCandidates, config.chain.chainId);
-      console.log(`Healthy RPC: ${rpcUrl}`);
-      if (config.walletPrivateKey) {
-        const contracts = buildContracts(rpcUrl, config.chain, config.walletPrivateKey);
-        const nativeBalance = await contracts.provider.getBalance(contracts.wallet.address);
-        const tokenBalance = await contracts.token.balanceOf(contracts.wallet.address);
-        console.log(`Wallet: ${contracts.wallet.address}`);
-        console.log(`Native balance: ${formatEther(nativeBalance)} ${config.chain.nativeToken.symbol}`);
-        console.log(`KOIN balance: ${formatEther(tokenBalance)} KOIN`);
-        if (nativeBalance < parseEther(config.chain.recommendedGasBufferNative)) {
-          warnings.push(
-            `native balance is below the recommended gas buffer of ${config.chain.recommendedGasBufferNative} ${config.chain.nativeToken.symbol}`
-          );
-        }
-      }
-    } catch (error) {
-      failures.push(error instanceof Error ? error.message : String(error));
+  const reports = await inspectNetworks(config);
+  const selectedNetworks = selectedHealthyNetworks(reports);
+
+  for (const report of reports) {
+    if (!report.enabled) {
+      continue;
+    }
+    if (report.network.kind !== "evm") {
+      warnings.push(`${report.label}: ${report.reason}`);
+      continue;
+    }
+    if (report.network.chainId === 0) {
+      failures.push(`${report.label}: chainId is still 0`);
+    }
+    if (report.status === "unhealthy") {
+      failures.push(`${report.label}: ${report.reason}`);
     }
   }
 
   console.log(`Role: ${config.role}`);
-  console.log(`Chain profile: ${config.chainProfile}`);
+  console.log(`Network profile: ${config.networkProfile}`);
+  console.log(`Selection mode: ${config.selectionMode}`);
   console.log(`Wallet source: ${config.walletSource}`);
+
+  if (config.walletPrivateKey) {
+    for (const activeNetwork of selectedNetworks) {
+      try {
+        const contracts = buildContracts(
+          activeNetwork.selectedRpcUrl,
+          activeNetwork.network,
+          config.walletPrivateKey
+        );
+        const nativeBalance = await contracts.provider.getBalance(contracts.wallet.address);
+        const tokenBalance = await contracts.token.balanceOf(contracts.wallet.address);
+        console.log(`Healthy network: ${activeNetwork.label}`);
+        console.log(`- Wallet: ${contracts.wallet.address}`);
+        console.log(`- RPC: ${activeNetwork.selectedRpcUrl}`);
+        console.log(
+          `- Native balance: ${formatEther(nativeBalance)} ${activeNetwork.network.nativeToken.symbol}`
+        );
+        console.log(`- KOIN balance: ${formatEther(tokenBalance)} KOIN`);
+        if (nativeBalance < parseEther(activeNetwork.network.recommendedGasBufferNative)) {
+          warnings.push(
+            `${activeNetwork.label}: native balance is below the recommended gas buffer of ${activeNetwork.network.recommendedGasBufferNative} ${activeNetwork.network.nativeToken.symbol}`
+          );
+        }
+      } catch (error) {
+        failures.push(
+          `${activeNetwork.label}: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    }
+  }
+
+  const selectedLabels = selectedNetworks.map((entry) => entry.label).join(", ");
+  console.log(`Selected runtime networks: ${selectedLabels || "none"}`);
 
   if (warnings.length > 0) {
     console.log("\nWarnings:");

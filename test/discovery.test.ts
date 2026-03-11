@@ -13,10 +13,10 @@ import {
 } from "../src/storage/discovery.js";
 import type { JobManifest, SubmissionReceipt } from "../src/types.js";
 
-test("discovery resolves manifests and receipts from filesystem roots", async () => {
+test("discovery resolves manifests and network-scoped receipts from filesystem roots", async () => {
   const root = mkdtempSync(join(tmpdir(), "koinara-node-discovery-"));
   mkdirSync(resolve(root, "jobs"), { recursive: true });
-  mkdirSync(resolve(root, "receipts"), { recursive: true });
+  mkdirSync(resolve(root, "receipts", "worldland"), { recursive: true });
 
   const manifestBody = {
     prompt: "Hello",
@@ -46,17 +46,45 @@ test("discovery resolves manifests and receipts from filesystem roots", async ()
 
   writeFileSync(resolve(root, "jobs", `${manifest.requestHash}.json`), JSON.stringify(manifest), "utf8");
   writeFileSync(
-    resolve(root, "receipts", `1-${receipt.responseHash}.json`),
+    resolve(root, "receipts", "worldland", `1-${receipt.responseHash}.json`),
     JSON.stringify(receipt),
     "utf8"
   );
 
   const resolvedManifest = await resolveJobManifest([root], manifest.requestHash);
-  const resolvedReceipt = await resolveSubmissionReceipt([root], 1, receipt.responseHash);
+  const resolvedReceipt = await resolveSubmissionReceipt([root], "worldland", 1, receipt.responseHash);
 
   assert.ok(resolvedManifest);
   assert.ok(resolvedReceipt);
   assert.equal(computeSchemaHash(resolvedManifest!), computeSchemaHash(manifest));
+  assert.equal(resolvedReceipt!.provider, receipt.provider);
+});
+
+test("discovery keeps legacy receipt fallback for older layouts", async () => {
+  const root = mkdtempSync(join(tmpdir(), "koinara-node-legacy-discovery-"));
+  mkdirSync(resolve(root, "receipts"), { recursive: true });
+
+  const receipt: SubmissionReceipt = {
+    version: "koinara-submission-receipt-v1",
+    jobId: 7,
+    responseHash: "0x",
+    provider: "0x0000000000000000000000000000000000000009",
+    body: {
+      contentType: "application/json",
+      output: { text: "Legacy" },
+      metadata: { backend: "openai" }
+    }
+  };
+  receipt.responseHash = computeResponseHash(receipt);
+
+  writeFileSync(
+    resolve(root, "receipts", `7-${receipt.responseHash}.json`),
+    JSON.stringify(receipt),
+    "utf8"
+  );
+
+  const resolvedReceipt = await resolveSubmissionReceipt([root], "base", 7, receipt.responseHash);
+  assert.ok(resolvedReceipt);
   assert.equal(resolvedReceipt!.provider, receipt.provider);
 });
 

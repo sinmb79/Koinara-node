@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 20+
-- A funded Worldland wallet
+- A funded wallet on at least one enabled EVM network
 - Access to a manifest root and a receipt root
 - One inference backend:
   - Ollama for local inference
@@ -20,6 +20,14 @@ The setup wizard creates:
 
 - `node.config.json`
 - `.env.local`
+
+During setup you choose:
+
+- role: `provider`, `verifier`, or `both`
+- network profile: `testnet` or `mainnet`
+- selection mode: `priority-failover` or `all-healthy`
+- enabled networks by key
+- provider backend when provider mode is enabled
 
 If you do not want to paste a private key directly, you can leave it blank during setup and later fill either:
 
@@ -52,7 +60,7 @@ npm run status
 npm run logs
 ```
 
-- `status` prints wallet, balances, selected RPC, and cached participation summary
+- `status` prints network health, selected runtime targets, wallet balances, and cached participation summary
 - `logs` runs the long-lived node loop and streams job activity to stdout
 
 ## Shared Manifest Roots

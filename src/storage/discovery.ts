@@ -61,30 +61,35 @@ export async function resolveJobManifest(
 
 export async function resolveSubmissionReceipt(
   roots: string[],
+  networkKey: string,
   jobId: number,
   responseHash: string
 ): Promise<SubmissionReceipt | null> {
+  const candidates = [
+    ["receipts", networkKey, `${jobId}-${responseHash}.json`],
+    ["receipts", `${jobId}-${responseHash}.json`]
+  ];
+
   for (const root of roots) {
-    const candidate = await readJsonMaybe<SubmissionReceipt>(root, [
-      "receipts",
-      `${jobId}-${responseHash}.json`
-    ]);
-    if (!candidate) {
-      continue;
+    for (const pathParts of candidates) {
+      const candidate = await readJsonMaybe<SubmissionReceipt>(root, pathParts);
+      if (!candidate) {
+        continue;
+      }
+      if (candidate.version !== "koinara-submission-receipt-v1") {
+        continue;
+      }
+      if (candidate.jobId !== jobId) {
+        continue;
+      }
+      if (candidate.responseHash.toLowerCase() !== responseHash.toLowerCase()) {
+        continue;
+      }
+      if (computeResponseHash(candidate).toLowerCase() !== responseHash.toLowerCase()) {
+        continue;
+      }
+      return candidate;
     }
-    if (candidate.version !== "koinara-submission-receipt-v1") {
-      continue;
-    }
-    if (candidate.jobId !== jobId) {
-      continue;
-    }
-    if (candidate.responseHash.toLowerCase() !== responseHash.toLowerCase()) {
-      continue;
-    }
-    if (computeResponseHash(candidate).toLowerCase() !== responseHash.toLowerCase()) {
-      continue;
-    }
-    return candidate;
   }
 
   return null;
@@ -92,23 +97,31 @@ export async function resolveSubmissionReceipt(
 
 export async function writeSubmissionReceipt(
   roots: string[],
+  networkKey: string,
   receipt: SubmissionReceipt
 ): Promise<string> {
-  const localRoot = roots.find((entry) => adapters.some((adapter) => adapter.name === "filesystem" && adapter.canHandle(entry)));
+  const localRoot = roots.find((entry) =>
+    adapters.some((adapter) => adapter.name === "filesystem" && adapter.canHandle(entry))
+  );
   if (!localRoot) {
     throw new Error("At least one local receipt root is required for writes");
   }
 
-  return writeJson(localRoot, ["receipts", `${receipt.jobId}-${receipt.responseHash}.json`], receipt);
+  return writeJson(
+    localRoot,
+    ["receipts", networkKey, `${receipt.jobId}-${receipt.responseHash}.json`],
+    receipt
+  );
 }
 
 export async function writeResultArtifact(
   artifactRoot: string,
+  networkKey: string,
   jobId: number,
   responseHash: string,
   output: unknown
 ): Promise<string> {
-  return writeJson(artifactRoot, ["results", `${jobId}-${responseHash}.json`], output);
+  return writeJson(artifactRoot, ["results", networkKey, `${jobId}-${responseHash}.json`], output);
 }
 
 async function readJsonMaybe<T>(root: string, pathParts: string[]): Promise<T | null> {

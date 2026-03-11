@@ -4,7 +4,13 @@ import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { fileURLToPath } from "node:url";
 import { repoRootFrom } from "../config/loadConfig.js";
-import type { FileNodeConfig, JobTypeName, NodeRole } from "../types.js";
+import type {
+  FileNodeConfig,
+  JobTypeName,
+  NetworkProfileName,
+  NetworkSelectionMode,
+  NodeRole
+} from "../types.js";
 
 type SetupShortcut = "provider-ollama" | "provider-openai" | "verifier-only";
 
@@ -16,7 +22,21 @@ export async function main(): Promise<void> {
   try {
     const defaults = getShortcutDefaults(shortcut);
     const role = (await ask(rl, "Select role (provider/verifier/both)", defaults.role)) as NodeRole;
-    const chainProfile = await ask(rl, "Select chain profile (testnet/mainnet)", defaults.chainProfile);
+    const networkProfile = (await ask(
+      rl,
+      "Select network profile (testnet/mainnet)",
+      defaults.networkProfile
+    )) as NetworkProfileName;
+    const selectionMode = (await ask(
+      rl,
+      "Network selection mode (priority-failover/all-healthy)",
+      "priority-failover"
+    )) as NetworkSelectionMode;
+    const enabledNetworks = await ask(
+      rl,
+      "Enabled networks (comma-separated keys: worldland,base,ethereum,bnb,solana)",
+      defaults.enabledNetworks.join(",")
+    );
     const sharedRoot = await ask(
       rl,
       "Shared manifest and receipt root, relative to repo/",
@@ -66,7 +86,12 @@ export async function main(): Promise<void> {
     }
 
     const fileConfig: FileNodeConfig = {
-      chainProfile: chainProfile === "mainnet" ? "mainnet" : "testnet",
+      networkProfile,
+      selectionMode,
+      enabledNetworks: enabledNetworks
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter(Boolean),
       pollIntervalMs,
       manifestRoots: [sharedRoot],
       receiptRoots: [sharedRoot],
@@ -81,6 +106,7 @@ export async function main(): Promise<void> {
       buildEnvTemplate({
         repoRoot,
         role,
+        networkProfile,
         openAiEnabled: providerConfig?.backend === "openai",
         walletInput: privateKeyOrPath
       })
@@ -112,7 +138,8 @@ function readShortcutProfile(argv: string[]): SetupShortcut | undefined {
 
 function getShortcutDefaults(shortcut?: SetupShortcut): {
   role: NodeRole;
-  chainProfile: "testnet";
+  networkProfile: NetworkProfileName;
+  enabledNetworks: string[];
   backend: "ollama" | "openai";
   providerJobTypes: JobTypeName[];
   verifierJobTypes: JobTypeName[];
@@ -120,7 +147,8 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
   if (shortcut === "provider-openai") {
     return {
       role: "provider",
-      chainProfile: "testnet",
+      networkProfile: "testnet",
+      enabledNetworks: ["worldland", "base"],
       backend: "openai",
       providerJobTypes: ["General", "Collective"],
       verifierJobTypes: ["Simple", "General", "Collective"]
@@ -130,7 +158,8 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
   if (shortcut === "verifier-only") {
     return {
       role: "verifier",
-      chainProfile: "testnet",
+      networkProfile: "testnet",
+      enabledNetworks: ["worldland"],
       backend: "ollama",
       providerJobTypes: ["Simple"],
       verifierJobTypes: ["Simple", "General", "Collective"]
@@ -139,7 +168,8 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
 
   return {
     role: "provider",
-    chainProfile: "testnet",
+    networkProfile: "testnet",
+    enabledNetworks: ["worldland"],
     backend: "ollama",
     providerJobTypes: ["Simple"],
     verifierJobTypes: ["Simple", "General", "Collective"]
@@ -186,11 +216,13 @@ function writeEnv(path: string, values: Record<string, string | undefined>): voi
 export function buildEnvTemplate(input: {
   repoRoot: string;
   role: NodeRole;
+  networkProfile: NetworkProfileName;
   openAiEnabled: boolean;
   walletInput: string;
 }): Record<string, string | undefined> {
   const values: Record<string, string | undefined> = {
-    NODE_ROLE: input.role
+    NODE_ROLE: input.role,
+    NETWORK_PROFILE: input.networkProfile
   };
 
   if (!input.walletInput) {

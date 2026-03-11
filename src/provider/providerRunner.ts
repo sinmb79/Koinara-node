@@ -1,3 +1,4 @@
+import { makeScopedJobKey, networkReceiptPrefix } from "../chain/networkSelection.js";
 import { jobStateNameFromValue, jobTypeNameFromValue, type KoinaraContracts } from "../chain/client.js";
 import { createInferenceBackend } from "../inference/inference.js";
 import {
@@ -8,10 +9,11 @@ import {
   writeSubmissionReceipt
 } from "../storage/discovery.js";
 import { FileStateStore } from "../state/fileStateStore.js";
-import type { RuntimeConfig, SubmissionReceipt } from "../types.js";
+import type { HealthyEvmNetwork, RuntimeConfig, SubmissionReceipt } from "../types.js";
 
 export async function runProviderPass(
   config: RuntimeConfig,
+  activeNetwork: HealthyEvmNetwork,
   contracts: KoinaraContracts,
   stateStore: FileStateStore
 ): Promise<void> {
@@ -23,7 +25,8 @@ export async function runProviderPass(
   const totalJobs = Number(await contracts.registry.totalJobs());
 
   for (let jobId = 1; jobId <= totalJobs; jobId += 1) {
-    if (stateStore.hasSubmitted(jobId)) {
+    const scopedJobKey = makeScopedJobKey(activeNetwork, jobId);
+    if (stateStore.hasSubmitted(scopedJobKey)) {
       continue;
     }
 
@@ -38,13 +41,13 @@ export async function runProviderPass(
       continue;
     }
 
-    const manifest = await resolveJobManifest(config.manifestRoots, job.requestHash);
+    const manifest = await resolveJobManifest(activeNetwork.network.manifestRoots, job.requestHash);
     if (!manifest) {
       continue;
     }
 
     if (computeSchemaHash(manifest).toLowerCase() !== String(job.schemaHash).toLowerCase()) {
-      console.warn(`provider: schema hash mismatch for job ${jobId}`);
+      console.warn(`${activeNetwork.key}: provider schema hash mismatch for job ${jobId}`);
       continue;
     }
 
@@ -57,7 +60,10 @@ export async function runProviderPass(
       body: {
         contentType: inference.contentType,
         output: inference.output,
-        metadata: inference.metadata
+        metadata: {
+          ...inference.metadata,
+          networkKey: activeNetwork.key
+        }
       }
     };
 
@@ -67,20 +73,35 @@ export async function runProviderPass(
       responseHash
     };
 
-    await writeResultArtifact(config.artifactOutputDir, jobId, responseHash, receipt.body.output);
-    await writeSubmissionReceipt(config.receiptRoots, receipt);
+    await writeResultArtifact(
+      activeNetwork.network.artifactOutputDir,
+      activeNetwork.key,
+      jobId,
+      responseHash,
+      receipt.body.output
+    );
+    await writeSubmissionReceipt(
+      activeNetwork.network.receiptRoots,
+      networkReceiptPrefix(activeNetwork),
+      receipt
+    );
 
     try {
       const tx = await contracts.registry.submitResponse(jobId, responseHash);
       const txReceipt = await tx.wait();
-      stateStore.markSubmitted(jobId, {
+      stateStore.markSubmitted(scopedJobKey, {
+        networkKey: activeNetwork.key,
         txHash: txReceipt?.hash ?? tx.hash,
         responseHash,
         recordedAt: new Date().toISOString()
       });
-      console.log(`provider: submitted response for job ${jobId} (${responseHash})`);
+      console.log(
+        `${activeNetwork.key}: provider submitted response for job ${jobId} (${responseHash})`
+      );
     } catch (error) {
-      console.warn(`provider: submitResponse failed for job ${jobId}: ${formatError(error)}`);
+      console.warn(
+        `${activeNetwork.key}: provider submitResponse failed for job ${jobId}: ${formatError(error)}`
+      );
     }
   }
 }

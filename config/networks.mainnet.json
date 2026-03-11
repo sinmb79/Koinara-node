@@ -1,0 +1,118 @@
+{
+  "networks": [
+    {
+      "key": "worldland",
+      "label": "Worldland Mainnet",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 1,
+      "networkRef": "worldland-mainnet",
+      "rpcUrls": [],
+      "chainId": 0,
+      "explorerBaseUrl": "",
+      "confirmationsRequired": 3,
+      "recommendedGasBufferNative": "0.05",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "WL"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "base",
+      "label": "Base Mainnet",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 2,
+      "networkRef": "base-mainnet",
+      "rpcUrls": [],
+      "chainId": 8453,
+      "explorerBaseUrl": "https://basescan.org",
+      "confirmationsRequired": 3,
+      "recommendedGasBufferNative": "0.01",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "ETH"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "ethereum",
+      "label": "Ethereum Mainnet",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 3,
+      "networkRef": "ethereum-mainnet",
+      "rpcUrls": [],
+      "chainId": 1,
+      "explorerBaseUrl": "https://etherscan.io",
+      "confirmationsRequired": 5,
+      "recommendedGasBufferNative": "0.02",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "ETH"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "bnb",
+      "label": "BNB Smart Chain Mainnet",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 4,
+      "networkRef": "bnb-mainnet",
+      "rpcUrls": [],
+      "chainId": 56,
+      "explorerBaseUrl": "https://bscscan.com",
+      "confirmationsRequired": 3,
+      "recommendedGasBufferNative": "0.01",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "BNB"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "solana",
+      "label": "Solana Mainnet Beta",
+      "kind": "solana",
+      "enabled": true,
+      "priority": 5,
+      "rpcUrls": [],
+      "cluster": "mainnet-beta",
+      "explorerBaseUrl": "https://explorer.solana.com",
+      "confirmationsRequired": 1,
+      "recommendedGasBufferNative": "0.05",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "SOL"
+      },
+      "programIds": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "tokenMint": ""
+      }
+    }
+  ]
+}

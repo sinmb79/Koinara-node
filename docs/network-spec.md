@@ -44,6 +44,10 @@ keccak256(utf8(canonical_json(body.schema)))
 
 Nodes discover provider outputs by looking up:
 
+- `receipts/<networkKey>/<jobId>-<responseHash>.json`
+
+For backward compatibility, the node also checks the older fallback path:
+
 - `receipts/<jobId>-<responseHash>.json`
 
 Each receipt has this shape:
@@ -74,7 +78,15 @@ keccak256(utf8(canonical_json(body)))
 
 `provider` must match the provider address recorded in the on-chain submission.
 
-## 3. Discovery Roots
+## 3. Result Artifacts
+
+Provider nodes write result artifacts under:
+
+- `results/<networkKey>/<jobId>-<responseHash>.json`
+
+This keeps artifacts isolated by deployment network and avoids collisions when the same numeric `jobId` exists on multiple chains.
+
+## 4. Discovery Roots
 
 The node program accepts multiple discovery roots.
 Each root can be:
@@ -85,9 +97,9 @@ Each root can be:
 The same path convention is used for both:
 
 - `<root>/jobs/<requestHash>.json`
-- `<root>/receipts/<jobId>-<responseHash>.json`
+- `<root>/receipts/<networkKey>/<jobId>-<responseHash>.json`
 
-## 4. Shared Storage Model
+## 5. Shared Storage Model
 
 This repository intentionally avoids a hosted service or database.
 For multi-machine operation, operators should use one of these patterns:

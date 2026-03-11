@@ -2,7 +2,15 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
-import type { ChainConfig, ChainProfileName, FileNodeConfig, NodeRole, RuntimeConfig } from "../types.js";
+import type {
+  FileNodeConfig,
+  NetworkConfig,
+  NetworkProfileName,
+  NodeRole,
+  RuntimeConfig,
+  RuntimeNetworkConfig,
+  NetworksProfile
+} from "../types.js";
 import { getRpcCandidates } from "../chain/rpc.js";
 
 export function repoRootFrom(importMetaUrl = import.meta.url): string {
@@ -23,26 +31,29 @@ export function loadRuntimeConfig(options?: {
   }
 
   const fileConfig = JSON.parse(readFileSync(nodeConfigPath, "utf8")) as FileNodeConfig;
-  const chainProfile = (process.env.CHAIN_PROFILE ?? fileConfig.chainProfile) as ChainProfileName;
+  const networkProfile = (process.env.NETWORK_PROFILE ?? fileConfig.networkProfile) as NetworkProfileName;
   const role = (process.env.NODE_ROLE ?? inferRole(fileConfig)) as NodeRole;
-  const chainPath = resolve(repoRoot, "config", `chain.${chainProfile}.json`);
-  const chain = JSON.parse(readFileSync(chainPath, "utf8")) as ChainConfig;
+  const networksPath = resolve(repoRoot, "config", `networks.${networkProfile}.json`);
+  const networksProfileData = JSON.parse(readFileSync(networksPath, "utf8")) as NetworksProfile;
   const walletResolution = loadWallet(repoRoot, options?.allowMissingWallet === true);
+  const networks = resolveRuntimeNetworks(
+    repoRoot,
+    fileConfig,
+    networksProfileData.networks,
+    process.env.RPC_URL
+  );
 
   return {
     repoRoot,
     role,
     walletPrivateKey: walletResolution.privateKey,
     walletSource: walletResolution.source,
-    chainProfile,
-    chain,
+    networkProfile,
+    selectionMode: fileConfig.selectionMode ?? "priority-failover",
+    networks,
     pollIntervalMs: fileConfig.pollIntervalMs,
-    manifestRoots: fileConfig.manifestRoots.map((entry) => resolveMaybe(repoRoot, entry)),
-    receiptRoots: fileConfig.receiptRoots.map((entry) => resolveMaybe(repoRoot, entry)),
-    artifactOutputDir: resolveMaybe(repoRoot, fileConfig.artifactOutputDir),
     stateDir: resolve(repoRoot, ".koinara-node"),
     statePath: resolve(repoRoot, ".koinara-node", "state.json"),
-    rpcCandidates: getRpcCandidates(chain, process.env.RPC_URL),
     provider: fileConfig.provider,
     verifier: fileConfig.verifier,
     openAiApiKey: process.env.OPENAI_API_KEY
@@ -57,6 +68,57 @@ function inferRole(fileConfig: FileNodeConfig): NodeRole {
     return "verifier";
   }
   return "provider";
+}
+
+function resolveRuntimeNetworks(
+  repoRoot: string,
+  fileConfig: FileNodeConfig,
+  networks: NetworkConfig[],
+  rpcOverride?: string
+): RuntimeNetworkConfig[] {
+  const enabledNetworks = fileConfig.enabledNetworks?.length ? fileConfig.enabledNetworks : ["worldland"];
+
+  return networks.map((network) => {
+    const enabledBySelection =
+      enabledNetworks.includes("*") || enabledNetworks.includes(network.key);
+    const manifestRoots =
+      network.manifestRoots?.length
+        ? network.manifestRoots.map((entry) => resolveMaybe(repoRoot, entry))
+        : fileConfig.manifestRoots.map((entry) => resolveMaybe(repoRoot, entry));
+    const receiptRoots =
+      network.receiptRoots?.length
+        ? network.receiptRoots.map((entry) => resolveMaybe(repoRoot, entry))
+        : fileConfig.receiptRoots.map((entry) => resolveMaybe(repoRoot, entry));
+    const artifactOutputDir = resolveMaybe(
+      repoRoot,
+      network.artifactOutputDir ??
+        `${trimTrailingSlash(fileConfig.artifactOutputDir)}/${network.key}`
+    );
+
+    if (network.kind === "evm") {
+      return {
+        ...network,
+        enabled: network.enabled && enabledBySelection,
+        manifestRoots,
+        receiptRoots,
+        artifactOutputDir,
+        rpcCandidates: getRpcCandidates(network.rpcUrls, rpcOverride)
+      };
+    }
+
+    return {
+      ...network,
+      enabled: network.enabled && enabledBySelection,
+      manifestRoots,
+      receiptRoots,
+      artifactOutputDir,
+      rpcCandidates: getRpcCandidates(network.rpcUrls)
+    };
+  });
+}
+
+function trimTrailingSlash(value: string): string {
+  return value.replace(/[\\/]+$/, "");
 }
 
 function loadEnvFiles(repoRoot: string): void {

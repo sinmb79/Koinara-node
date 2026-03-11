@@ -1,5 +1,9 @@
 {
-  "chainProfile": "testnet",
+  "networkProfile": "testnet",
+  "selectionMode": "priority-failover",
+  "enabledNetworks": [
+    "worldland"
+  ],
   "pollIntervalMs": 10000,
   "manifestRoots": [
     "./.koinara-node/network"

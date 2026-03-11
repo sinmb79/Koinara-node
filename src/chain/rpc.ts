@@ -1,8 +1,7 @@
 import { JsonRpcProvider } from "ethers";
-import type { ChainConfig } from "../types.js";
 
-export function getRpcCandidates(chain: ChainConfig, override?: string): string[] {
-  const candidates = [override, chain.rpcUrl, ...(chain.backupRpcUrls ?? [])]
+export function getRpcCandidates(rpcUrls: string[], override?: string): string[] {
+  const candidates = [override, ...rpcUrls]
     .filter((entry): entry is string => Boolean(entry && entry.trim()))
     .map((entry) => entry.trim());
 

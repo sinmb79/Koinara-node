@@ -37,6 +37,27 @@ Verifier quorum is defined by the protocol and derived from job type.
 
 `Koinara-node` does not override quorum with local configuration.
 
+## Multichain Runtime Model
+
+`Koinara-node` supports multiple deployed Koinara instances.
+
+- The runtime can process `Worldland`, `Base`, `Ethereum`, and `BNB` as independent EVM deployments.
+- It can either:
+  - select the highest-priority healthy network
+  - run across all healthy EVM networks
+- It does not move an existing job from one chain to another.
+- It does not bridge KOIN or merge rewards across chains.
+
+## Solana Scope
+
+This release includes Solana preparation only.
+
+- config schema for a future Solana deployment
+- adapter boundary for future runtime support
+- documentation for the planned expansion path
+
+It does not yet include a runnable Solana chain adapter or Solana program deployment.
+
 ## Known Protocol Constraints
 
 - The protocol stores `requestHash`, `schemaHash`, and `responseHash` on-chain, not payload URIs.

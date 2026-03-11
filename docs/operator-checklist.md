@@ -1,6 +1,6 @@
 # Operator Checklist
 
-This checklist is for a real node operator preparing `Koinara-node` for Worldland participation.
+This checklist is for a real node operator preparing `Koinara-node` for multichain participation.
 
 It is written to minimize guesswork and to separate:
 
@@ -12,10 +12,10 @@ It is written to minimize guesswork and to separate:
 ## 1. One-time Preparation
 
 - Confirm the target protocol deployment is `sinmb79/koinara@v0.1.6`
-- Fill the correct Worldland values in:
-  - `config/chain.testnet.json`
-  - `config/chain.mainnet.json`
-- Set the deployed contract addresses in the selected chain profile:
+- Fill the correct values in:
+  - `config/networks.testnet.json`
+  - `config/networks.mainnet.json`
+- Set the deployed contract addresses on each network you plan to enable:
   - `registry`
   - `verifier`
   - `rewardDistributor`
@@ -24,6 +24,10 @@ It is written to minimize guesswork and to separate:
   - provider
   - verifier
   - both
+- Decide which EVM networks should be:
+  - primary
+  - failover
+  - disabled
 - Decide the shared discovery root strategy:
   - local shared folder
   - synced folder
@@ -31,7 +35,7 @@ It is written to minimize guesswork and to separate:
 
 ## 2. Wallet and Backend Readiness
 
-- Fund the wallet with enough native token for gas
+- Fund the wallet with enough native token for gas on every enabled EVM network
 - Keep a gas buffer above `recommendedGasBufferNative`
 - If using `ollama`:
   - install Ollama
@@ -54,6 +58,8 @@ During setup:
 
 - choose `provider`, `verifier`, or `both`
 - choose `testnet` or `mainnet`
+- choose `priority-failover` or `all-healthy`
+- choose enabled network keys
 - choose `ollama` or `openai` if provider is enabled
 - set supported job types
 - set discovery roots
@@ -77,9 +83,8 @@ npm run doctor
 
 Do not proceed until these are true:
 
-- RPC is reachable
-- `chainId` matches the selected profile
-- contract addresses are filled
+- at least one selected EVM network is healthy
+- contract addresses are filled for the networks you selected
 - wallet resolves correctly
 - provider config exists when provider role is enabled
 - verifier config exists when verifier role is enabled
@@ -94,9 +99,9 @@ npm run status
 Verify:
 
 - wallet address is the intended wallet
-- native balance is sufficient
-- `KOIN` balance reads correctly
-- the selected RPC is the intended endpoint
+- native balances are sufficient
+- `KOIN` balances read correctly on reachable networks
+- the selected runtime targets are the intended networks
 
 ## 5. Discovery Root Check
 
@@ -105,7 +110,7 @@ Before live operation, make sure the node can actually discover off-chain job do
 The node expects:
 
 - `jobs/<requestHash>.json`
-- `receipts/<jobId>-<responseHash>.json`
+- `receipts/<networkKey>/<jobId>-<responseHash>.json`
 
 Verify that:
 
@@ -127,7 +132,7 @@ npm run node:once
 This is useful to confirm:
 
 - config loads
-- RPC connects
+- selected network health is evaluated
 - wallet signs normally
 - discovery paths resolve
 - no immediate runtime exceptions occur
@@ -177,12 +182,13 @@ npm run status
 
 Watch for:
 
-- native balance dropping too low
+- native balance dropping too low on active networks
 - repeated `submitResponse` failures
 - repeated verifier participation failures
 - missing manifests
 - missing receipts
 - stuck jobs that never move beyond `Submitted` or `UnderVerification`
+- primary network health degradation that triggers failover
 
 Runtime artifacts are stored under:
 
@@ -198,7 +204,7 @@ Important local files:
 If the process crashes:
 
 1. Inspect the last logs
-2. Confirm the wallet still has gas
+2. Confirm the wallet still has gas on enabled networks
 3. Confirm the shared discovery root is still readable
 4. Restart with:
 
@@ -211,10 +217,10 @@ Correctness is still chain-derived, so the node should skip jobs already submitt
 
 ## 10. Mainnet Readiness Gate
 
-Only move to mainnet operation when all of the following are true:
+Only move to unattended mainnet operation when all of the following are true:
 
-- testnet or local rehearsal has already completed
-- the selected RPC is stable
+- local or test rehearsal has already completed
+- the selected RPCs are stable
 - the wallet is funded
 - contract addresses are correct
 - discovery roots are working across machines

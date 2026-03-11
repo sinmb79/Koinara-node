@@ -1,0 +1,120 @@
+{
+  "networks": [
+    {
+      "key": "worldland",
+      "label": "Worldland Testnet",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 1,
+      "networkRef": "worldland-testnet",
+      "rpcUrls": [
+        "http://localhost:8545"
+      ],
+      "chainId": 0,
+      "explorerBaseUrl": "",
+      "confirmationsRequired": 1,
+      "recommendedGasBufferNative": "0.05",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "WLC"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "base",
+      "label": "Base Sepolia",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 2,
+      "networkRef": "base-sepolia",
+      "rpcUrls": [],
+      "chainId": 84532,
+      "explorerBaseUrl": "https://sepolia.basescan.org",
+      "confirmationsRequired": 2,
+      "recommendedGasBufferNative": "0.01",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "ETH"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "ethereum",
+      "label": "Ethereum Sepolia",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 3,
+      "networkRef": "ethereum-sepolia",
+      "rpcUrls": [],
+      "chainId": 11155111,
+      "explorerBaseUrl": "https://sepolia.etherscan.io",
+      "confirmationsRequired": 2,
+      "recommendedGasBufferNative": "0.01",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "ETH"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "bnb",
+      "label": "BNB Smart Chain Testnet",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 4,
+      "networkRef": "bnb-testnet",
+      "rpcUrls": [],
+      "chainId": 97,
+      "explorerBaseUrl": "https://testnet.bscscan.com",
+      "confirmationsRequired": 2,
+      "recommendedGasBufferNative": "0.01",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "tBNB"
+      },
+      "contracts": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "token": ""
+      }
+    },
+    {
+      "key": "solana",
+      "label": "Solana Devnet",
+      "kind": "solana",
+      "enabled": true,
+      "priority": 5,
+      "rpcUrls": [],
+      "cluster": "devnet",
+      "explorerBaseUrl": "https://explorer.solana.com",
+      "confirmationsRequired": 1,
+      "recommendedGasBufferNative": "0.05",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "SOL"
+      },
+      "programIds": {
+        "registry": "",
+        "verifier": "",
+        "rewardDistributor": "",
+        "tokenMint": ""
+      }
+    }
+  ]
+}

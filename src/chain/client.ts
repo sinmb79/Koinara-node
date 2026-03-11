@@ -1,6 +1,6 @@
 import { Contract, JsonRpcProvider, Wallet } from "ethers";
 import type {
-  ChainConfig,
+  EvmRuntimeNetworkConfig,
   JobStateName,
   JobTypeName,
   OnChainJob,
@@ -51,7 +51,7 @@ export interface KoinaraContracts {
 
 export function buildContracts(
   rpcUrl: string,
-  chain: ChainConfig,
+  chain: EvmRuntimeNetworkConfig,
   walletPrivateKey: string
 ): KoinaraContracts {
   const provider = new JsonRpcProvider(rpcUrl, chain.chainId || undefined);

@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { buildContracts } from "./chain/client.js";
-import { resolveHealthyRpcUrl } from "./chain/rpc.js";
+import { inspectNetworks, selectedHealthyNetworks, summarizeSelection } from "./chain/networkSelection.js";
 import { loadRuntimeConfig } from "./config/loadConfig.js";
 import { runProviderPass } from "./provider/providerRunner.js";
 import { FileStateStore } from "./state/fileStateStore.js";
@@ -9,63 +9,81 @@ import { runVerifierPass } from "./verifier/verifierRunner.js";
 
 export async function main(): Promise<void> {
   const config = loadRuntimeConfig();
-  const selectedRpcUrl = await resolveHealthyRpcUrl(config.rpcCandidates, config.chain.chainId);
-  const contracts = buildContracts(selectedRpcUrl, config.chain, config.walletPrivateKey);
   mkdirSync(resolve(config.stateDir), { recursive: true });
   const stateStore = new FileStateStore(config.statePath);
   const runOnce = process.argv.includes("--once") || process.env.NODE_RUN_ONCE === "1";
 
   console.log(`Starting Koinara node as ${config.role}`);
-  console.log(`Wallet: ${contracts.wallet.address}`);
-  console.log(`RPC: ${selectedRpcUrl}`);
+  console.log(`Network profile: ${config.networkProfile}`);
+  console.log(`Selection mode: ${config.selectionMode}`);
   console.log(`Wallet source: ${config.walletSource}`);
   stateStore.touch();
 
   if (runOnce) {
-    await runPasses(config.role, config.pollIntervalMs, config, contracts, stateStore, true);
+    await runPasses(config, stateStore);
     return;
   }
 
-  await runPasses(config.role, config.pollIntervalMs, config, contracts, stateStore, false);
+  await loop(config.pollIntervalMs, () => runPasses(config, stateStore));
 }
 
 async function runPasses(
-  role: string,
-  intervalMs: number,
-  config: Parameters<typeof runProviderPass>[0],
-  contracts: Parameters<typeof runProviderPass>[1],
-  stateStore: FileStateStore,
-  once: boolean
+  config: ReturnType<typeof loadRuntimeConfig>,
+  stateStore: FileStateStore
 ): Promise<void> {
-  const tasks: Array<Promise<void>> = [];
+  const reports = await inspectNetworks(config);
+  const activeNetworks = selectedHealthyNetworks(reports);
 
-  if (role === "provider" || role === "both") {
-    tasks.push(loop("provider", intervalMs, () => runProviderPass(config, contracts, stateStore), once));
-  }
-  if (role === "verifier" || role === "both") {
-    tasks.push(loop("verifier", intervalMs, () => runVerifierPass(config, contracts, stateStore), once));
+  for (const report of reports) {
+    stateStore.updateNetworkHealth(report.key, {
+      status: report.status,
+      selectedRpcUrl: report.selectedRpcUrl,
+      lastCheckedAt: new Date().toISOString(),
+      lastError: report.reason
+    });
   }
 
-  await Promise.all(tasks);
+  if (activeNetworks.length === 0) {
+    const configuredTargets = reports
+      .filter((report) => report.enabled)
+      .map((report) => report.label)
+      .join(", ");
+    console.warn(
+      `No healthy EVM networks selected for ${config.selectionMode}. Configured targets: ${configuredTargets || summarizeSelection(reports)}`
+    );
+    return;
+  }
+
+  for (const activeNetwork of activeNetworks) {
+    const contracts = buildContracts(
+      activeNetwork.selectedRpcUrl,
+      activeNetwork.network,
+      config.walletPrivateKey
+    );
+
+    console.log(
+      `Running pass on ${activeNetwork.label} (${activeNetwork.selectedRpcUrl}) as ${contracts.wallet.address}`
+    );
+
+    if (config.role === "provider" || config.role === "both") {
+      await runProviderPass(config, activeNetwork, contracts, stateStore);
+    }
+    if (config.role === "verifier" || config.role === "both") {
+      await runVerifierPass(config, activeNetwork, contracts, stateStore);
+    }
+  }
 }
 
-async function loop(
-  label: string,
-  intervalMs: number,
-  fn: () => Promise<void>,
-  once: boolean
-): Promise<void> {
+async function loop(intervalMs: number, fn: () => Promise<void>): Promise<void> {
+  // Keep the runtime simple and reevaluate network health every cycle.
   do {
     try {
       await fn();
     } catch (error) {
-      console.error(`${label}: pass failed`, error);
-    }
-    if (once) {
-      break;
+      console.error("runtime: pass failed", error);
     }
     await sleep(intervalMs);
-  } while (!once);
+  } while (true);
 }
 
 function sleep(ms: number): Promise<void> {
