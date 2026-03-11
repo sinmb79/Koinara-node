@@ -14,6 +14,20 @@ cd Koinara-node
 npm install
 ```
 
+For Windows PowerShell, prefer this version:
+
+```powershell
+git clone https://github.com/sinmb79/Koinara-node.git "$env:USERPROFILE\\koinara-node"
+cd "$env:USERPROFILE\\koinara-node"
+npm.cmd install
+```
+
+If you want one helper command after cloning:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
+```
+
 ## 2. Fill local-only settings
 
 Edit these locally:
@@ -46,6 +60,9 @@ This creates:
 
 - `.env.local`
 - `node.config.json`
+
+The setup wizard now defaults runtime files to `~/.koinara-node` instead of the cloned repository
+folder.
 
 ## 4. Run preflight checks
 

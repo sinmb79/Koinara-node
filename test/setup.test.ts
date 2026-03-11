@@ -12,11 +12,13 @@ test("buildEnvTemplate supports inline private keys", () => {
     role: "provider",
     networkProfile: "testnet",
     openAiEnabled: false,
-    walletInput: "0x1234"
+    walletInput: "0x1234",
+    stateDir: join(repoRoot, ".koinara-node", "state")
   });
 
   assert.equal(env.NODE_ROLE, "provider");
   assert.equal(env.NETWORK_PROFILE, "testnet");
+  assert.equal(env.NODE_STATE_DIR, join(repoRoot, ".koinara-node", "state"));
   assert.equal(env.WALLET_PRIVATE_KEY, "0x1234");
   assert.equal(env.WALLET_KEYFILE, undefined);
 });
@@ -28,11 +30,13 @@ test("buildEnvTemplate enables OpenAI key when needed", () => {
     role: "both",
     networkProfile: "mainnet",
     openAiEnabled: true,
-    walletInput: ""
+    walletInput: "",
+    stateDir: join(repoRoot, ".koinara-node", "state")
   });
 
   assert.equal(env.NODE_ROLE, "both");
   assert.equal(env.NETWORK_PROFILE, "mainnet");
+  assert.equal(env.NODE_STATE_DIR, join(repoRoot, ".koinara-node", "state"));
   assert.equal(env.WALLET_PRIVATE_KEY, "");
   assert.equal(env.WALLET_KEYFILE, "");
   assert.equal(env.OPENAI_API_KEY, "");

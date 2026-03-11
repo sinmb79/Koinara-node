@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
@@ -16,10 +17,21 @@ type SetupShortcut = "provider-ollama" | "provider-openai" | "verifier-only";
 
 export async function main(): Promise<void> {
   const repoRoot = repoRootFrom(import.meta.url);
+  const homeRoot = homedir();
+  const runtimeRoot = resolve(homeRoot, ".koinara-node");
   const shortcut = readShortcutProfile(process.argv);
   const rl = createInterface({ input, output });
 
   try {
+    const preferredRepoRoot = resolve(homeRoot, "koinara-node");
+    const desktopRoot = resolve(homeRoot, "Desktop");
+    if (repoRoot.startsWith(desktopRoot) || repoRoot.toLowerCase().startsWith("c:\\windows\\system32")) {
+      console.warn(
+        `Warning: the repository is running from ${repoRoot}. ` +
+          `Recommended clone path is ${preferredRepoRoot}.`
+      );
+    }
+
     const defaults = getShortcutDefaults(shortcut);
     const role = (await ask(rl, "Select role (provider/verifier/both)", defaults.role)) as NodeRole;
     const networkProfile = (await ask(
@@ -39,13 +51,13 @@ export async function main(): Promise<void> {
     );
     const sharedRoot = await ask(
       rl,
-      "Shared manifest and receipt root, relative to repo/",
-      "./.koinara-node/network"
+      "Shared manifest and receipt root",
+      resolve(runtimeRoot, "network")
     );
     const artifactOutputDir = await ask(
       rl,
-      "Artifact output directory, relative to repo/",
-      "./.koinara-node/artifacts"
+      "Artifact output directory",
+      resolve(runtimeRoot, "artifacts")
     );
     const pollIntervalMs = Number(await ask(rl, "Polling interval in milliseconds", "10000"));
     const privateKeyOrPath = await ask(
@@ -108,7 +120,8 @@ export async function main(): Promise<void> {
         role,
         networkProfile,
         openAiEnabled: providerConfig?.backend === "openai",
-        walletInput: privateKeyOrPath
+        walletInput: privateKeyOrPath,
+        stateDir: resolve(runtimeRoot, "state")
       })
     );
 
@@ -219,10 +232,12 @@ export function buildEnvTemplate(input: {
   networkProfile: NetworkProfileName;
   openAiEnabled: boolean;
   walletInput: string;
+  stateDir: string;
 }): Record<string, string | undefined> {
   const values: Record<string, string | undefined> = {
     NODE_ROLE: input.role,
-    NETWORK_PROFILE: input.networkProfile
+    NETWORK_PROFILE: input.networkProfile,
+    NODE_STATE_DIR: input.stateDir
   };
 
   if (!input.walletInput) {

@@ -17,6 +17,21 @@ npm install
 npm run setup
 ```
 
+On Windows PowerShell, use a user-owned path and `npm.cmd` if PowerShell blocks `npm.ps1`:
+
+```powershell
+git clone https://github.com/sinmb79/Koinara-node.git "$env:USERPROFILE\\koinara-node"
+cd "$env:USERPROFILE\\koinara-node"
+npm.cmd install
+npm.cmd run setup
+```
+
+Or use:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
+```
+
 The setup wizard creates:
 
 - `node.config.json`
@@ -37,6 +52,9 @@ During setup you choose:
 - selection mode: `priority-failover` or `all-healthy`
 - enabled networks by key
 - provider backend when provider mode is enabled
+
+By default, setup now places runtime state, manifests, receipts, and artifacts under
+`~/.koinara-node` so they do not depend on where the repository was cloned.
 
 If you do not want to paste a private key directly, you can leave it blank during setup and later fill either:
 

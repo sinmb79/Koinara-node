@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
@@ -199,5 +200,18 @@ export function resolveMaybe(baseDir: string, target: string): string {
     return target;
   }
 
-  return resolve(baseDir, target);
+  return resolve(baseDir, expandPathTokens(target));
+}
+
+function expandPathTokens(target: string): string {
+  let expanded = target;
+
+  if (expanded === "~" || expanded.startsWith("~/") || expanded.startsWith("~\\")) {
+    expanded = resolve(homedir(), expanded.slice(2));
+  }
+
+  expanded = expanded.replace(/%([^%]+)%/g, (_, name: string) => process.env[name] ?? `%${name}%`);
+  expanded = expanded.replace(/\$HOME/g, homedir());
+
+  return expanded;
 }

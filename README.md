@@ -46,6 +46,21 @@ npm run doctor
 npm run node
 ```
 
+On Windows PowerShell, prefer a user-owned path and `npm.cmd` if `npm.ps1` is blocked:
+
+```powershell
+git clone https://github.com/sinmb79/Koinara-node.git "$env:USERPROFILE\\koinara-node"
+cd "$env:USERPROFILE\\koinara-node"
+npm.cmd install
+npm.cmd run setup
+```
+
+You can also use the built-in bootstrap helper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
+```
+
 For a single pass instead of a daemon loop:
 
 ```bash
@@ -110,6 +125,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-autostart.ps1
 - Worldland v2 runtime settings live in `node.config.v2-mainnet.json`
 - Secrets live in `.env.local`
 - Split-role secrets can live in `.env.provider.local` and `.env.verifier.local`
+- New setup defaults place runtime state, manifests, receipts, and artifacts under `~/.koinara-node`
 
 The example files are:
 
