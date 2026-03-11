@@ -124,13 +124,43 @@ npm run verifier:v2:claim
 
 ## What Does Not Exist Yet
 
-The repository still does not ship:
+The repository now ships:
+
+- a workspace-ready OpenClaw skill at `skills/koinara-node/SKILL.md`
+- install helpers:
+  - `scripts/install-openclaw-skill.ps1`
+  - `scripts/install-openclaw-skill.sh`
+
+What still does not exist yet:
 
 - a first-class `openclaw connect koinara-node` command
-- a dedicated OpenClaw skill package that manages the node runtime for you
 - a MetaMask-style browser signer bridge for the node runtime
 
 Those remain future convenience layers above the public node.
+
+## Install the OpenClaw Skill
+
+If you want the Koinara skill available in your global OpenClaw skills folder:
+
+### Windows PowerShell
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
+```
+
+### macOS / Linux
+
+```bash
+bash ./scripts/install-openclaw-skill.sh
+```
+
+This copies the skill into:
+
+- Windows: `C:\Users\<user>\.openclaw\skills\koinara-node`
+- macOS / Linux: `~/.openclaw/skills/koinara-node`
+
+If you open the repository itself as an OpenClaw workspace, the skill can also be loaded directly
+from the repo-local `skills/` folder.
 
 ## Direction
 

@@ -29,6 +29,7 @@ Worldland v2 is live and includes:
 - `provider`, `verifier`, or `both` roles
 - `ollama` and `openai` inference backends
 - built-in `openclaw` provider backend through the local OpenClaw CLI
+- a bundled OpenClaw skill package under `skills/koinara-node/`
 - direct contract interaction through `ethers v6`
 - terminal-first `setup`, `doctor`, `status`, and long-running `node` commands
 - local filesystem and HTTP discovery roots for off-chain manifests and submission receipts
@@ -65,6 +66,12 @@ For a single pass instead of a daemon loop:
 
 ```bash
 npm run node:once
+```
+
+If you want to install the bundled OpenClaw skill globally:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
 ```
 
 ## Commands
