@@ -1,0 +1,18 @@
+{
+  "chainId": 0,
+  "rpcUrl": "http://localhost:8545",
+  "backupRpcUrls": [],
+  "explorerBaseUrl": "",
+  "confirmationsRequired": 1,
+  "recommendedGasBufferNative": "0.05",
+  "nativeToken": {
+    "type": "native",
+    "symbol": "WLC"
+  },
+  "contracts": {
+    "registry": "",
+    "verifier": "",
+    "rewardDistributor": "",
+    "token": ""
+  }
+}

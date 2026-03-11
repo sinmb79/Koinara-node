@@ -1,0 +1,29 @@
+{
+  "chainProfile": "testnet",
+  "pollIntervalMs": 10000,
+  "manifestRoots": [
+    "./.koinara-node/network"
+  ],
+  "receiptRoots": [
+    "./.koinara-node/network"
+  ],
+  "artifactOutputDir": "./.koinara-node/artifacts",
+  "provider": {
+    "backend": "ollama",
+    "supportedJobTypes": [
+      "Simple"
+    ],
+    "ollama": {
+      "baseUrl": "http://127.0.0.1:11434",
+      "model": "llama3.1"
+    }
+  },
+  "verifier": {
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "supportedSchemaHashes": []
+  }
+}

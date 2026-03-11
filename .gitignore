@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.koinara-node/
+.env.local
+.env
+node.config.json
+.DS_Store
+Thumbs.db
