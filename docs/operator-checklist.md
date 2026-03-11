@@ -73,12 +73,26 @@ Expected files after setup:
 - `.env.local`
 - `node.config.json`
 
+If `provider` and `verifier` will run as separate processes on one machine, also prepare:
+
+- `.env.provider.local`
+- `.env.verifier.local`
+
+Set a unique `NODE_STATE_DIR` in each file.
+
 ## 4. Preflight Check
 
 Run:
 
 ```bash
 npm run doctor
+```
+
+If roles are split, run:
+
+```bash
+npm run provider:doctor
+npm run verifier:doctor
 ```
 
 Do not proceed until these are true:
@@ -129,6 +143,13 @@ Start a single-pass dry check first:
 npm run node:once
 ```
 
+If roles are split, run:
+
+```bash
+npm run provider:once
+npm run verifier:once
+```
+
 This is useful to confirm:
 
 - config loads
@@ -150,6 +171,13 @@ npm run logs
 ```
 
 for the same long-running stdout stream.
+
+If roles are split, start one process per role:
+
+```bash
+npm run provider:start
+npm run verifier:start
+```
 
 ## 7. Canary Operation
 
@@ -198,6 +226,11 @@ Important local files:
 
 - `.koinara-node/state.json`
 - `.koinara-node/artifacts/`
+
+For split-role operation, expect separate state files such as:
+
+- `.koinara-node/provider/state.json`
+- `.koinara-node/verifier/state.json`
 
 ## 9. Safe Recovery
 

@@ -1,0 +1,31 @@
+{
+  "networks": [
+    {
+      "key": "worldland",
+      "label": "Worldland Seoul Mainnet (Koinara v2)",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 1,
+      "networkRef": "worldland-seoul-mainnet-v2",
+      "rpcUrls": [
+        "https://seoul.worldland.foundation/"
+      ],
+      "chainId": 103,
+      "explorerBaseUrl": "https://scan.worldland.foundation/",
+      "confirmationsRequired": 3,
+      "recommendedGasBufferNative": "0.05",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "WLC"
+      },
+      "contracts": {
+        "registry": "0x865315BE82c432A45BB68C959413026F6202e368",
+        "verifier": "0x3b63deb3632b2484bAb6069281f08642ab112b16",
+        "rewardDistributor": "0x6Db94C2c93af7b0B5345C66535D5dC7cD9225126",
+        "token": "0x7749473E36a8d6E741d9E581106E81CacAb7832a",
+        "nodeRegistry": "0x243fB879fBE521c5c227Da9EF731968413755131"
+      },
+      "protocolVersion": "v2"
+    }
+  ]
+}

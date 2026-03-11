@@ -15,8 +15,14 @@ It lets an operator run as a provider, a verifier, or both with direct contract 
 - Live runtime target: `Worldland`, `Base`, `Ethereum`, `BNB Smart Chain`
 - Prepared only: `Solana`
 
-The v1 runtime can actively process EVM deployments and fail over between healthy EVM networks.
+The runtime can actively process EVM deployments and fail over between healthy EVM networks.
 Solana is included only as a configuration and adapter-preparation target in this release.
+
+Worldland v2 is live and includes:
+
+- node registration
+- heartbeat-based active rewards
+- deferred work reward claims
 
 ## Features
 
@@ -53,18 +59,71 @@ npm run node:once
 - `npm run node`
 - `npm run node:once`
 - `npm run logs`
+- `npm run provider:doctor`
+- `npm run provider:status`
+- `npm run provider:once`
+- `npm run provider:start`
+- `npm run provider:v2:doctor`
+- `npm run provider:v2:status`
+- `npm run provider:v2:once`
+- `npm run provider:v2:start`
+- `npm run verifier:doctor`
+- `npm run verifier:status`
+- `npm run verifier:once`
+- `npm run verifier:start`
+- `npm run verifier:v2:doctor`
+- `npm run verifier:v2:status`
+- `npm run verifier:v2:once`
+- `npm run verifier:v2:start`
 - `npm run test`
+
+To install Windows logon auto-start for both roles:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
+```
+
+To remove it again:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-autostart.ps1
+```
 
 ## Configuration
 
 - Network profiles live in `config/networks.testnet.json` and `config/networks.mainnet.json`
 - Runtime settings live in `node.config.json`
+- Worldland v2 runtime settings live in `node.config.v2-mainnet.json`
 - Secrets live in `.env.local`
+- Split-role secrets can live in `.env.provider.local` and `.env.verifier.local`
 
 The example files are:
 
 - `.env.example`
 - `node.config.example.json`
+- `node.config.v2-mainnet.json`
+
+If you want local-only overrides without editing the tracked network profiles, create:
+
+- `config/networks.testnet.local.json`
+- `config/networks.mainnet.local.json`
+
+The tracked Worldland v2 profile is:
+
+- `config/networks.mainnet.v2.json`
+
+If you want to run `provider` and `verifier` as separate processes on one machine:
+
+- keep shared runtime settings in `node.config.json`
+- put `provider` secrets in `.env.provider.local`
+- put `verifier` secrets in `.env.verifier.local`
+- set a different `NODE_STATE_DIR` in each file
+- start them with `npm run provider:start` and `npm run verifier:start`
+
+For the live Worldland v2 path, use:
+
+- `npm run provider:v2:start`
+- `npm run verifier:v2:start`
 
 ## Off-chain Discovery
 

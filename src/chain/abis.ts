@@ -18,10 +18,23 @@ export const verifierAbi = [
 
 export const rewardDistributorAbi = [
   "function distributeRewards(uint256 jobId, address provider)",
-  "function rewardsDistributed(uint256 jobId) view returns (bool)"
+  "function rewardsDistributed(uint256 jobId) view returns (bool)",
+  "function currentEpoch() view returns (uint256)",
+  "function recordAcceptedJob(uint256 jobId, address provider)",
+  "function claimProviderWorkReward(uint256 jobId)",
+  "function claimVerifierWorkReward(uint256 jobId)",
+  "function claimActiveReward(uint256 epoch)"
 ] as const;
 
 export const tokenAbi = [
   "function balanceOf(address owner) view returns (uint256)",
   "function decimals() view returns (uint8)"
+] as const;
+
+export const nodeRegistryAbi = [
+  "function getNode(address node) view returns ((uint8 role,bytes32 metadataHash,uint64 registeredAt,uint64 lastHeartbeatEpoch,bool active))",
+  "function registerNode(uint8 role, bytes32 metadataHash)",
+  "function heartbeat() returns (uint256)",
+  "function currentEpoch() view returns (uint256)",
+  "function isNodeActiveAt(address node, uint256 epoch) view returns (bool)"
 ] as const;

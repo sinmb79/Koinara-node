@@ -4,10 +4,15 @@ import type { NetworkHealthStatus, StoredNodeState } from "../types.js";
 
 const DEFAULT_STATE: StoredNodeState = {
   provider: {
-    submittedJobs: {}
+    submittedJobs: {},
+    claimedWorkRewards: {},
+    claimedActiveEpochs: {}
   },
   verifier: {
-    participatedJobs: {}
+    participatedJobs: {},
+    recordedAcceptedJobs: {},
+    claimedWorkRewards: {},
+    claimedActiveEpochs: {}
   },
   networkHealth: {}
 };
@@ -63,6 +68,71 @@ export class FileStateStore {
     return structuredClone(this.state);
   }
 
+  hasProviderWorkRewardClaim(jobKey: string): boolean {
+    return Boolean(this.state.provider.claimedWorkRewards[jobKey]);
+  }
+
+  markProviderWorkRewardClaim(
+    jobKey: string,
+    entry: { networkKey: string; txHash: string; recordedAt: string }
+  ): void {
+    this.state.provider.claimedWorkRewards[jobKey] = entry;
+    this.state.lastRunAt = new Date().toISOString();
+    this.save();
+  }
+
+  hasProviderActiveEpochClaim(epochKey: string): boolean {
+    return Boolean(this.state.provider.claimedActiveEpochs[epochKey]);
+  }
+
+  markProviderActiveEpochClaim(
+    epochKey: string,
+    entry: { networkKey: string; txHash: string; recordedAt: string }
+  ): void {
+    this.state.provider.claimedActiveEpochs[epochKey] = entry;
+    this.state.lastRunAt = new Date().toISOString();
+    this.save();
+  }
+
+  hasVerifierAcceptedRecord(jobKey: string): boolean {
+    return Boolean(this.state.verifier.recordedAcceptedJobs[jobKey]);
+  }
+
+  markVerifierAcceptedRecord(
+    jobKey: string,
+    entry: { networkKey: string; txHash: string; recordedAt: string }
+  ): void {
+    this.state.verifier.recordedAcceptedJobs[jobKey] = entry;
+    this.state.lastRunAt = new Date().toISOString();
+    this.save();
+  }
+
+  hasVerifierWorkRewardClaim(jobKey: string): boolean {
+    return Boolean(this.state.verifier.claimedWorkRewards[jobKey]);
+  }
+
+  markVerifierWorkRewardClaim(
+    jobKey: string,
+    entry: { networkKey: string; txHash: string; recordedAt: string }
+  ): void {
+    this.state.verifier.claimedWorkRewards[jobKey] = entry;
+    this.state.lastRunAt = new Date().toISOString();
+    this.save();
+  }
+
+  hasVerifierActiveEpochClaim(epochKey: string): boolean {
+    return Boolean(this.state.verifier.claimedActiveEpochs[epochKey]);
+  }
+
+  markVerifierActiveEpochClaim(
+    epochKey: string,
+    entry: { networkKey: string; txHash: string; recordedAt: string }
+  ): void {
+    this.state.verifier.claimedActiveEpochs[epochKey] = entry;
+    this.state.lastRunAt = new Date().toISOString();
+    this.save();
+  }
+
   touch(): void {
     this.state.lastRunAt = new Date().toISOString();
     this.save();
@@ -76,10 +146,15 @@ export class FileStateStore {
     const loaded = JSON.parse(readFileSync(this.path, "utf8")) as Partial<StoredNodeState>;
     return {
       provider: {
-        submittedJobs: loaded.provider?.submittedJobs ?? {}
+        submittedJobs: loaded.provider?.submittedJobs ?? {},
+        claimedWorkRewards: loaded.provider?.claimedWorkRewards ?? {},
+        claimedActiveEpochs: loaded.provider?.claimedActiveEpochs ?? {}
       },
       verifier: {
-        participatedJobs: loaded.verifier?.participatedJobs ?? {}
+        participatedJobs: loaded.verifier?.participatedJobs ?? {},
+        recordedAcceptedJobs: loaded.verifier?.recordedAcceptedJobs ?? {},
+        claimedWorkRewards: loaded.verifier?.claimedWorkRewards ?? {},
+        claimedActiveEpochs: loaded.verifier?.claimedActiveEpochs ?? {}
       },
       networkHealth: loaded.networkHealth ?? {},
       lastRunAt: loaded.lastRunAt

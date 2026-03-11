@@ -1,0 +1,33 @@
+{
+  "networkProfile": "mainnet",
+  "selectionMode": "priority-failover",
+  "enabledNetworks": [
+    "worldland"
+  ],
+  "pollIntervalMs": 10000,
+  "manifestRoots": [
+    "../worldland/.koinara-worldland-v2/network"
+  ],
+  "receiptRoots": [
+    "../worldland/.koinara-worldland-v2/network"
+  ],
+  "artifactOutputDir": "./.koinara-node-v2/artifacts",
+  "provider": {
+    "backend": "ollama",
+    "supportedJobTypes": [
+      "Simple"
+    ],
+    "ollama": {
+      "baseUrl": "http://127.0.0.1:11434",
+      "model": "qwen3.5:latest"
+    }
+  },
+  "verifier": {
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "supportedSchemaHashes": []
+  }
+}

@@ -1,13 +1,14 @@
-import { Contract, JsonRpcProvider, Wallet } from "ethers";
+import { Contract, JsonRpcProvider, NonceManager, Wallet } from "ethers";
 import type {
   EvmRuntimeNetworkConfig,
   JobStateName,
   JobTypeName,
+  ProtocolVersionName,
   OnChainJob,
   OnChainSubmission,
   VerificationRecord
 } from "../types.js";
-import { registryAbi, rewardDistributorAbi, tokenAbi, verifierAbi } from "./abis.js";
+import { nodeRegistryAbi, registryAbi, rewardDistributorAbi, tokenAbi, verifierAbi } from "./abis.js";
 
 export const jobTypeToNumber: Record<JobTypeName, number> = {
   Simple: 0,
@@ -43,10 +44,12 @@ export function jobStateNameFromValue(value: bigint): JobStateName {
 export interface KoinaraContracts {
   provider: JsonRpcProvider;
   wallet: Wallet;
+  protocolVersion: ProtocolVersionName;
   registry: Contract;
   verifier: Contract;
   rewardDistributor: Contract;
   token: Contract;
+  nodeRegistry?: Contract;
 }
 
 export function buildContracts(
@@ -56,14 +59,21 @@ export function buildContracts(
 ): KoinaraContracts {
   const provider = new JsonRpcProvider(rpcUrl, chain.chainId || undefined);
   const wallet = new Wallet(walletPrivateKey, provider);
+  const signer = new NonceManager(wallet);
 
   return {
     provider,
     wallet,
-    registry: new Contract(chain.contracts.registry, registryAbi, wallet),
-    verifier: new Contract(chain.contracts.verifier, verifierAbi, wallet),
-    rewardDistributor: new Contract(chain.contracts.rewardDistributor, rewardDistributorAbi, wallet),
-    token: new Contract(chain.contracts.token, tokenAbi, wallet)
+    protocolVersion: chain.protocolVersion ?? (chain.contracts.nodeRegistry ? "v2" : "v1"),
+    registry: new Contract(chain.contracts.registry, registryAbi, signer),
+    verifier: new Contract(chain.contracts.verifier, verifierAbi, signer),
+    rewardDistributor: new Contract(chain.contracts.rewardDistributor, rewardDistributorAbi, signer),
+    token: new Contract(chain.contracts.token, tokenAbi, signer),
+    ...(chain.contracts.nodeRegistry
+      ? {
+          nodeRegistry: new Contract(chain.contracts.nodeRegistry, nodeRegistryAbi, signer)
+        }
+      : {})
   };
 }
 

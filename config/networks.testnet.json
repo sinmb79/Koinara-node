@@ -2,17 +2,17 @@
   "networks": [
     {
       "key": "worldland",
-      "label": "Worldland Testnet",
+      "label": "Worldland Gwangju Testnet",
       "kind": "evm",
       "enabled": true,
       "priority": 1,
-      "networkRef": "worldland-testnet",
+      "networkRef": "worldland-gwangju-testnet",
       "rpcUrls": [
-        "http://localhost:8545"
+        "https://gwangju.worldland.foundation/"
       ],
-      "chainId": 0,
-      "explorerBaseUrl": "",
-      "confirmationsRequired": 1,
+      "chainId": 10395,
+      "explorerBaseUrl": "https://scan.worldland.foundation/",
+      "confirmationsRequired": 2,
       "recommendedGasBufferNative": "0.05",
       "nativeToken": {
         "type": "native",

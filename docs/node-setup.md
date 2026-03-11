@@ -21,6 +21,14 @@ The setup wizard creates:
 - `node.config.json`
 - `.env.local`
 
+If you plan to run `provider` and `verifier` as separate processes on one machine, you can keep
+shared settings in `node.config.json` and create:
+
+- `.env.provider.local`
+- `.env.verifier.local`
+
+Set a different `NODE_STATE_DIR` in each file so the two processes do not share one state cache.
+
 During setup you choose:
 
 - role: `provider`, `verifier`, or `both`
@@ -43,6 +51,35 @@ npm run node
 
 The role comes from `NODE_ROLE=provider|verifier|both`.
 
+For split-role operation on one machine, use:
+
+```bash
+npm run provider:doctor
+npm run provider:start
+npm run verifier:doctor
+npm run verifier:start
+```
+
+For the live Worldland v2 path, use:
+
+```bash
+npm run provider:v2:doctor
+npm run provider:v2:start
+npm run verifier:v2:doctor
+npm run verifier:v2:start
+```
+
+If you want both roles to start automatically when you log into Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
+```
+
+This creates two scheduled tasks:
+
+- `Koinara Provider Autostart`
+- `Koinara Verifier Autostart`
+
 ## Verify Participation
 
 - Provider:
@@ -51,7 +88,7 @@ The role comes from `NODE_ROLE=provider|verifier|both`.
   - watch for `verifySubmission` or `rejectSubmission` from your wallet
 - Both:
   - watch the job state move to `Settled`
-  - confirm KOIN appears in your wallet
+  - on v2, confirm the accepted job is recorded and wait for the next epoch before claiming `active` / `work` rewards
 
 ## Status and Logs
 

@@ -6,6 +6,7 @@ import { loadRuntimeConfig } from "./config/loadConfig.js";
 import { runProviderPass } from "./provider/providerRunner.js";
 import { FileStateStore } from "./state/fileStateStore.js";
 import { runVerifierPass } from "./verifier/verifierRunner.js";
+import { runV2Maintenance } from "./v2/maintenance.js";
 
 export async function main(): Promise<void> {
   const config = loadRuntimeConfig();
@@ -64,6 +65,8 @@ async function runPasses(
     console.log(
       `Running pass on ${activeNetwork.label} (${activeNetwork.selectedRpcUrl}) as ${contracts.wallet.address}`
     );
+
+    await runV2Maintenance(config, activeNetwork, contracts, stateStore);
 
     if (config.role === "provider" || config.role === "both") {
       await runProviderPass(config, activeNetwork, contracts, stateStore);

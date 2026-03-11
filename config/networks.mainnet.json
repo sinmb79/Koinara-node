@@ -2,19 +2,21 @@
   "networks": [
     {
       "key": "worldland",
-      "label": "Worldland Mainnet",
+      "label": "Worldland Seoul Mainnet",
       "kind": "evm",
       "enabled": true,
       "priority": 1,
-      "networkRef": "worldland-mainnet",
-      "rpcUrls": [],
-      "chainId": 0,
-      "explorerBaseUrl": "",
+      "networkRef": "worldland-seoul-mainnet",
+      "rpcUrls": [
+        "https://seoul.worldland.foundation/"
+      ],
+      "chainId": 103,
+      "explorerBaseUrl": "https://scan.worldland.foundation/",
       "confirmationsRequired": 3,
       "recommendedGasBufferNative": "0.05",
       "nativeToken": {
         "type": "native",
-        "symbol": "WL"
+        "symbol": "WLC"
       },
       "contracts": {
         "registry": "",

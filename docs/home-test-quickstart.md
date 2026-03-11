@@ -19,8 +19,15 @@ npm install
 Edit these locally:
 
 - `config/networks.testnet.json` or `config/networks.mainnet.json`
+- or prefer `config/networks.testnet.local.json` / `config/networks.mainnet.local.json`
 - `.env.local`
 - `node.config.json`
+
+If you want `provider` and `verifier` split on one computer, prefer:
+
+- `.env.provider.local`
+- `.env.verifier.local`
+- separate `NODE_STATE_DIR` values for each role
 
 Never commit:
 
@@ -47,6 +54,15 @@ npm run doctor
 npm run status
 ```
 
+For split roles, use:
+
+```bash
+npm run provider:doctor
+npm run verifier:doctor
+npm run provider:status
+npm run verifier:status
+```
+
 Check:
 
 - wallet address is correct
@@ -59,6 +75,13 @@ Check:
 
 ```bash
 npm run node:once
+```
+
+For split roles:
+
+```bash
+npm run provider:once
+npm run verifier:once
 ```
 
 This is the safest first runtime check.
@@ -81,6 +104,13 @@ or:
 
 ```bash
 npm run logs
+```
+
+For split roles:
+
+```bash
+npm run provider:start
+npm run verifier:start
 ```
 
 ## 7. Watch for success

@@ -14,6 +14,7 @@ export type InferenceBackendName = "ollama" | "openai";
 export type NetworkKind = "evm" | "solana";
 export type NetworkSelectionMode = "priority-failover" | "all-healthy";
 export type NetworkHealthStatus = "healthy" | "unhealthy" | "unsupported" | "disabled";
+export type ProtocolVersionName = "v1" | "v2";
 
 export interface ChainConfig {
   key: string;
@@ -37,7 +38,9 @@ export interface ChainConfig {
     verifier: string;
     rewardDistributor: string;
     token: string;
+    nodeRegistry?: string;
   };
+  protocolVersion?: ProtocolVersionName;
   manifestRoots?: string[];
   receiptRoots?: string[];
   artifactOutputDir?: string;
@@ -131,7 +134,9 @@ export interface EvmRuntimeNetworkConfig extends RuntimeNetworkConfigBase {
     verifier: string;
     rewardDistributor: string;
     token: string;
+    nodeRegistry?: string;
   };
+  protocolVersion?: ProtocolVersionName;
 }
 
 export interface SolanaRuntimeNetworkConfig extends RuntimeNetworkConfigBase {
@@ -260,6 +265,22 @@ export interface StoredNodeState {
         recordedAt: string;
       }
     >;
+    claimedWorkRewards: Record<
+      string,
+      {
+        networkKey: string;
+        txHash: string;
+        recordedAt: string;
+      }
+    >;
+    claimedActiveEpochs: Record<
+      string,
+      {
+        networkKey: string;
+        txHash: string;
+        recordedAt: string;
+      }
+    >;
   };
   verifier: {
     participatedJobs: Record<
@@ -267,6 +288,30 @@ export interface StoredNodeState {
       {
         networkKey: string;
         action: string;
+        txHash: string;
+        recordedAt: string;
+      }
+    >;
+    recordedAcceptedJobs: Record<
+      string,
+      {
+        networkKey: string;
+        txHash: string;
+        recordedAt: string;
+      }
+    >;
+    claimedWorkRewards: Record<
+      string,
+      {
+        networkKey: string;
+        txHash: string;
+        recordedAt: string;
+      }
+    >;
+    claimedActiveEpochs: Record<
+      string,
+      {
+        networkKey: string;
         txHash: string;
         recordedAt: string;
       }

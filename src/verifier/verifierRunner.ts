@@ -23,6 +23,7 @@ import type {
   RuntimeConfig,
   VerificationRecord
 } from "../types.js";
+import { tryRecordAcceptedJobV2 } from "../v2/maintenance.js";
 
 export async function runVerifierPass(
   config: RuntimeConfig,
@@ -48,7 +49,11 @@ export async function runVerifierPass(
 
     if (stateName === "Accepted") {
       const submission = (await contracts.registry.getSubmission(jobId)) as OnChainSubmission;
-      await tryDistributeRewards(activeNetwork, contracts, jobId, submission.provider);
+      if (contracts.protocolVersion === "v2") {
+        await tryRecordAcceptedJobV2(activeNetwork, contracts, stateStore, scopedJobKey, jobId, submission.provider);
+      } else {
+        await tryDistributeRewards(activeNetwork, contracts, jobId, submission.provider);
+      }
       continue;
     }
 
@@ -66,7 +71,7 @@ export async function runVerifierPass(
     }
 
     if (stateStore.hasParticipated(scopedJobKey)) {
-      await tryFinalizeAndSettle(activeNetwork, contracts, jobId);
+      await tryFinalizeAndSettle(activeNetwork, contracts, stateStore, jobId);
       continue;
     }
 
@@ -77,7 +82,7 @@ export async function runVerifierPass(
         txHash: "on-chain",
         recordedAt: new Date().toISOString()
       });
-      await tryFinalizeAndSettle(activeNetwork, contracts, jobId);
+      await tryFinalizeAndSettle(activeNetwork, contracts, stateStore, jobId);
       continue;
     }
 
@@ -115,7 +120,7 @@ export async function runVerifierPass(
       );
     }
 
-    await tryFinalizeAndSettle(activeNetwork, contracts, jobId);
+    await tryFinalizeAndSettle(activeNetwork, contracts, stateStore, jobId);
   }
 }
 
@@ -209,6 +214,7 @@ async function tryMarkExpired(
 async function tryFinalizeAndSettle(
   activeNetwork: HealthyEvmNetwork,
   contracts: KoinaraContracts,
+  stateStore: FileStateStore,
   jobId: number
 ): Promise<void> {
   try {
@@ -223,6 +229,18 @@ async function tryFinalizeAndSettle(
 
   const record = asRecord((await contracts.verifier.getRecord(jobId)) as VerificationRecord);
   if (!record.finalized || record.rejected || record.poiHash === zeroHash()) {
+    return;
+  }
+
+  if (contracts.protocolVersion === "v2") {
+    await tryRecordAcceptedJobV2(
+      activeNetwork,
+      contracts,
+      stateStore,
+      makeScopedJobKey(activeNetwork, jobId),
+      jobId,
+      record.provider
+    );
     return;
   }
 

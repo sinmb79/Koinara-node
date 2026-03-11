@@ -25,7 +25,10 @@ export function loadRuntimeConfig(options?: {
 
   loadEnvFiles(repoRoot);
 
-  const nodeConfigPath = resolve(repoRoot, "node.config.json");
+  const explicitNodeConfigPath = process.env.NODE_CONFIG_FILE?.trim();
+  const nodeConfigPath = explicitNodeConfigPath
+    ? resolveMaybe(repoRoot, explicitNodeConfigPath)
+    : resolve(repoRoot, "node.config.json");
   if (!existsSync(nodeConfigPath)) {
     throw new Error(`Missing ${nodeConfigPath}. Run npm run setup first.`);
   }
@@ -33,7 +36,7 @@ export function loadRuntimeConfig(options?: {
   const fileConfig = JSON.parse(readFileSync(nodeConfigPath, "utf8")) as FileNodeConfig;
   const networkProfile = (process.env.NETWORK_PROFILE ?? fileConfig.networkProfile) as NetworkProfileName;
   const role = (process.env.NODE_ROLE ?? inferRole(fileConfig)) as NodeRole;
-  const networksPath = resolve(repoRoot, "config", `networks.${networkProfile}.json`);
+  const networksPath = resolveNetworksPath(repoRoot, networkProfile);
   const networksProfileData = JSON.parse(readFileSync(networksPath, "utf8")) as NetworksProfile;
   const walletResolution = loadWallet(repoRoot, options?.allowMissingWallet === true);
   const networks = resolveRuntimeNetworks(
@@ -42,6 +45,7 @@ export function loadRuntimeConfig(options?: {
     networksProfileData.networks,
     process.env.RPC_URL
   );
+  const stateDir = resolveStateDir(repoRoot);
 
   return {
     repoRoot,
@@ -52,8 +56,8 @@ export function loadRuntimeConfig(options?: {
     selectionMode: fileConfig.selectionMode ?? "priority-failover",
     networks,
     pollIntervalMs: fileConfig.pollIntervalMs,
-    stateDir: resolve(repoRoot, ".koinara-node"),
-    statePath: resolve(repoRoot, ".koinara-node", "state.json"),
+    stateDir,
+    statePath: resolve(stateDir, "state.json"),
     provider: fileConfig.provider,
     verifier: fileConfig.verifier,
     openAiApiKey: process.env.OPENAI_API_KEY
@@ -121,16 +125,45 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/[\\/]+$/, "");
 }
 
+function resolveNetworksPath(repoRoot: string, networkProfile: NetworkProfileName): string {
+  const explicitNetworksPath = process.env.NODE_NETWORKS_FILE?.trim();
+  if (explicitNetworksPath) {
+    return resolveMaybe(repoRoot, explicitNetworksPath);
+  }
+
+  const localOverride = resolve(repoRoot, "config", `networks.${networkProfile}.local.json`);
+  if (existsSync(localOverride)) {
+    return localOverride;
+  }
+
+  return resolve(repoRoot, "config", `networks.${networkProfile}.json`);
+}
+
 function loadEnvFiles(repoRoot: string): void {
   const envPath = resolve(repoRoot, ".env");
-  const envLocalPath = resolve(repoRoot, ".env.local");
+  const explicitEnvPath = process.env.NODE_ENV_FILE?.trim();
+  const envLocalPath = explicitEnvPath
+    ? resolveMaybe(repoRoot, explicitEnvPath)
+    : resolve(repoRoot, ".env.local");
 
   if (existsSync(envPath)) {
     dotenv.config({ path: envPath });
   }
+  if (explicitEnvPath && !existsSync(envLocalPath)) {
+    throw new Error(`NODE_ENV_FILE does not exist: ${explicitEnvPath}`);
+  }
   if (existsSync(envLocalPath)) {
     dotenv.config({ path: envLocalPath, override: true });
   }
+}
+
+function resolveStateDir(repoRoot: string): string {
+  const stateDirOverride = process.env.NODE_STATE_DIR?.trim();
+  if (stateDirOverride) {
+    return resolveMaybe(repoRoot, stateDirOverride);
+  }
+
+  return resolve(repoRoot, ".koinara-node");
 }
 
 function loadWallet(
