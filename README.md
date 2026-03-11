@@ -78,6 +78,7 @@ See [docs/network-spec.md](docs/network-spec.md) for the canonical format.
 ## Docs
 
 - [docs/node-setup.md](docs/node-setup.md)
+- [docs/openclaw-integration.md](docs/openclaw-integration.md)
 - [docs/home-test-quickstart.md](docs/home-test-quickstart.md)
 - [docs/home-test-checklist.md](docs/home-test-checklist.md)
 - [docs/operator-checklist.md](docs/operator-checklist.md)

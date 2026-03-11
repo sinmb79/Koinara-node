@@ -67,3 +67,13 @@ npm run logs
 
 If your provider and verifier run on different machines, point them to a shared discovery root.
 The node uses the hash-addressed rules from [docs/network-spec.md](./network-spec.md).
+
+## OpenClaw
+
+If you want to drive Koinara from an OpenClaw agent, see [docs/openclaw-integration.md](./openclaw-integration.md).
+The current supported path is:
+
+- OpenClaw for agent workflow and prompt orchestration
+- `Koinara-node` for actual provider / verifier participation and on-chain transactions
+
+The node does not yet ship a built-in OpenClaw skill package in this repository.
