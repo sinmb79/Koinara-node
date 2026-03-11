@@ -10,7 +10,7 @@ export type JobStateName =
   | "Rejected"
   | "Settled"
   | "Expired";
-export type InferenceBackendName = "ollama" | "openai";
+export type InferenceBackendName = "ollama" | "openai" | "openclaw";
 export type NetworkKind = "evm" | "solana";
 export type NetworkSelectionMode = "priority-failover" | "all-healthy";
 export type NetworkHealthStatus = "healthy" | "unhealthy" | "unsupported" | "disabled";
@@ -97,6 +97,14 @@ export interface FileNodeConfig {
     openai?: {
       model: string;
       baseUrl?: string;
+    };
+    openclaw?: {
+      command?: string;
+      agent?: string;
+      thinking?: "off" | "minimal" | "low" | "medium" | "high";
+      timeoutSeconds?: number;
+      local?: boolean;
+      profile?: string;
     };
   };
   verifier?: {

@@ -1,5 +1,6 @@
 import type { FileNodeConfig, JobManifest } from "../types.js";
 import { OllamaBackend } from "./ollamaBackend.js";
+import { OpenClawBackend } from "./openclawBackend.js";
 import { OpenAIBackend } from "./openaiBackend.js";
 
 export interface InferenceResult {
@@ -22,6 +23,10 @@ export function createInferenceBackend(
       throw new Error("Ollama backend requires provider.ollama configuration");
     }
     return new OllamaBackend(providerConfig.ollama.baseUrl, providerConfig.ollama.model);
+  }
+
+  if (providerConfig.backend === "openclaw") {
+    return new OpenClawBackend(providerConfig.openclaw);
   }
 
   if (!providerConfig.openai) {

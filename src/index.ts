@@ -13,24 +13,32 @@ export async function main(): Promise<void> {
   mkdirSync(resolve(config.stateDir), { recursive: true });
   const stateStore = new FileStateStore(config.statePath);
   const runOnce = process.argv.includes("--once") || process.env.NODE_RUN_ONCE === "1";
+  const claimsOnly =
+    process.argv.includes("--claims-only") || process.env.NODE_CLAIMS_ONLY === "1";
 
   console.log(`Starting Koinara node as ${config.role}`);
   console.log(`Network profile: ${config.networkProfile}`);
   console.log(`Selection mode: ${config.selectionMode}`);
   console.log(`Wallet source: ${config.walletSource}`);
+  if (claimsOnly) {
+    console.log("Mode: claims-only");
+  }
   stateStore.touch();
 
   if (runOnce) {
-    await runPasses(config, stateStore);
+    await runPasses(config, stateStore, { claimsOnly });
     return;
   }
 
-  await loop(config.pollIntervalMs, () => runPasses(config, stateStore));
+  await loop(config.pollIntervalMs, () => runPasses(config, stateStore, { claimsOnly }));
 }
 
 async function runPasses(
   config: ReturnType<typeof loadRuntimeConfig>,
-  stateStore: FileStateStore
+  stateStore: FileStateStore,
+  options?: {
+    claimsOnly?: boolean;
+  }
 ): Promise<void> {
   const reports = await inspectNetworks(config);
   const activeNetworks = selectedHealthyNetworks(reports);
@@ -67,6 +75,9 @@ async function runPasses(
     );
 
     await runV2Maintenance(config, activeNetwork, contracts, stateStore);
+    if (options?.claimsOnly) {
+      continue;
+    }
 
     if (config.role === "provider" || config.role === "both") {
       await runProviderPass(config, activeNetwork, contracts, stateStore);

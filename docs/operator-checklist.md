@@ -44,6 +44,10 @@ It is written to minimize guesswork and to separate:
 - If using `openai`:
   - confirm the API key is valid
   - confirm the selected model is accessible
+- If using `openclaw`:
+  - confirm `openclaw agent --agent main --local --json --message "Reply with OK"` succeeds
+  - confirm the selected OpenClaw agent id is available
+  - confirm OpenClaw can reach the intended local model provider
 
 ## 3. Local Setup
 
@@ -61,6 +65,7 @@ During setup:
 - choose `priority-failover` or `all-healthy`
 - choose enabled network keys
 - choose `ollama` or `openai` if provider is enabled
+- choose `openclaw` if you want the provider output to come from an OpenClaw agent
 - set supported job types
 - set discovery roots
 - set the artifact output path
@@ -93,6 +98,13 @@ If roles are split, run:
 ```bash
 npm run provider:doctor
 npm run verifier:doctor
+```
+
+For Worldland v2 claim-only settlement, also verify:
+
+```bash
+npm run provider:v2:status
+npm run verifier:v2:status
 ```
 
 Do not proceed until these are true:
@@ -197,8 +209,9 @@ Success criteria:
 - provider sends `submitResponse`
 - verifier sends `registerSubmission` and `verifySubmission` or `rejectSubmission`
 - accepted path reaches `finalizePoI`
-- settlement path reaches `distributeRewards`
-- wallet `KOIN` balance increases
+- settlement path reaches `recordAcceptedJob`
+- after the epoch closes, `npm run provider:v2:claim` and `npm run verifier:v2:claim` succeed
+- wallet `KOIN` balance increases after claim
 
 ## 8. Ongoing Operations
 

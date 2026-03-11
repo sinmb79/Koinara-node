@@ -8,6 +8,7 @@
 - One inference backend:
   - Ollama for local inference
   - OpenAI for hosted inference
+  - OpenClaw for agent-driven local inference through the OpenClaw CLI
 
 ## Setup
 
@@ -65,8 +66,18 @@ For the live Worldland v2 path, use:
 ```bash
 npm run provider:v2:doctor
 npm run provider:v2:start
+npm run provider:v2:claim
 npm run verifier:v2:doctor
 npm run verifier:v2:start
+npm run verifier:v2:claim
+```
+
+For the built-in OpenClaw provider path, use:
+
+```bash
+npm run provider:v2:openclaw:doctor
+npm run provider:v2:openclaw:start
+npm run provider:v2:openclaw:claim
 ```
 
 If you want both roles to start automatically when you log into Windows:
@@ -98,6 +109,7 @@ npm run logs
 ```
 
 - `status` prints network health, selected runtime targets, wallet balances, and cached participation summary
+- on v2, `status` also prints current epoch, next close time, and estimated claimable rewards
 - `logs` runs the long-lived node loop and streams job activity to stdout
 
 ## Shared Manifest Roots
@@ -108,9 +120,10 @@ The node uses the hash-addressed rules from [docs/network-spec.md](./network-spe
 ## OpenClaw
 
 If you want to drive Koinara from an OpenClaw agent, see [docs/openclaw-integration.md](./openclaw-integration.md).
-The current supported path is:
+The current supported paths are:
 
 - OpenClaw for agent workflow and prompt orchestration
+- OpenClaw as a built-in provider backend through `provider.backend = "openclaw"`
 - `Koinara-node` for actual provider / verifier participation and on-chain transactions
 
-The node does not yet ship a built-in OpenClaw skill package in this repository.
+What still does not exist in this repository is a first-class OpenClaw skill package that manages the node for you.

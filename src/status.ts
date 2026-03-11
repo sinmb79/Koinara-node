@@ -4,7 +4,7 @@ import { buildContracts } from "./chain/client.js";
 import { inspectNetworks, selectedHealthyNetworks } from "./chain/networkSelection.js";
 import { loadRuntimeConfig } from "./config/loadConfig.js";
 import { FileStateStore } from "./state/fileStateStore.js";
-import type { StoredNodeState } from "./types.js";
+import type { HealthyEvmNetwork, StoredNodeState } from "./types.js";
 
 async function main(): Promise<void> {
   const config = loadRuntimeConfig({ allowMissingWallet: true });
@@ -42,6 +42,10 @@ async function main(): Promise<void> {
       `- Native balance: ${formatEther(nativeBalance)} ${activeNetwork.network.nativeToken.symbol}`
     );
     console.log(`- KOIN balance: ${formatEther(tokenBalance)} KOIN`);
+
+    if (contracts.protocolVersion === "v2" && contracts.nodeRegistry) {
+      await printV2RewardStatus(config.role, activeNetwork, contracts, stateStore, state);
+    }
   }
 
   console.log("\nCached participation summary:");
@@ -67,6 +71,190 @@ function printNetworkSummary(
     }
     console.log(parts.join(" "));
   }
+}
+
+async function printV2RewardStatus(
+  role: "provider" | "verifier" | "both",
+  activeNetwork: HealthyEvmNetwork,
+  contracts: ReturnType<typeof buildContracts>,
+  stateStore: FileStateStore,
+  state: StoredNodeState
+): Promise<void> {
+  const wallet = contracts.wallet.address;
+  const currentEpoch = Number(await contracts.nodeRegistry!.currentEpoch());
+  const genesisTimestamp = Number(await contracts.nodeRegistry!.genesisTimestamp());
+  const epochDuration = Number(await contracts.nodeRegistry!.epochDuration());
+  const currentEpochActive = await contracts.nodeRegistry!.isNodeActiveAt(wallet, currentEpoch);
+  const nextEpochClose = genesisTimestamp + (currentEpoch + 1) * epochDuration;
+
+  console.log(`- Current epoch: ${currentEpoch}`);
+  console.log(`- Next epoch close: ${formatUnixSeconds(nextEpochClose)}`);
+  console.log(`- Active in current epoch: ${currentEpochActive ? "yes" : "no"}`);
+
+  if (currentEpoch === 0) {
+    console.log("- Claimable protocol rewards now: none yet (first epoch is still open)");
+    return;
+  }
+
+  const latestClosedEpoch = currentEpoch - 1;
+  const latestClosedActive = await contracts.nodeRegistry!.isNodeActiveAt(wallet, latestClosedEpoch);
+  console.log(`- Latest closed epoch: ${latestClosedEpoch}`);
+  console.log(`- Active in latest closed epoch: ${latestClosedActive ? "yes" : "no"}`);
+
+  const activeClaims = await estimateActiveClaims(
+    role,
+    activeNetwork,
+    contracts,
+    stateStore,
+    latestClosedEpoch
+  );
+  if (activeClaims.epochs > 0) {
+    console.log(
+      `- Claimable active rewards: ${activeClaims.epochs} epoch(s), estimated ${formatEther(activeClaims.reward)} KOIN`
+    );
+  } else {
+    console.log("- Claimable active rewards: none");
+  }
+
+  if (role === "provider" || role === "both") {
+    const providerClaims = await estimateProviderWorkClaims(activeNetwork, contracts, stateStore, state);
+    if (providerClaims.jobs > 0) {
+      console.log(
+        `- Claimable provider work rewards: ${providerClaims.jobs} job(s), estimated ${formatEther(providerClaims.reward)} KOIN`
+      );
+    } else {
+      console.log("- Claimable provider work rewards: none");
+    }
+  }
+
+  if (role === "verifier" || role === "both") {
+    const verifierClaims = await estimateVerifierWorkClaims(activeNetwork, contracts, stateStore, state);
+    if (verifierClaims.jobs > 0) {
+      console.log(
+        `- Claimable verifier work rewards: ${verifierClaims.jobs} job(s), estimated ${formatEther(verifierClaims.reward)} KOIN`
+      );
+    } else {
+      console.log("- Claimable verifier work rewards: none");
+    }
+  }
+
+  console.log("- Claim shortcut: npm run " + (role === "verifier" ? "verifier:v2:claim" : "provider:v2:claim"));
+}
+
+async function estimateActiveClaims(
+  role: "provider" | "verifier" | "both",
+  activeNetwork: HealthyEvmNetwork,
+  contracts: ReturnType<typeof buildContracts>,
+  stateStore: FileStateStore,
+  latestClosedEpoch: number
+): Promise<{ epochs: number; reward: bigint }> {
+  let epochs = 0;
+  let reward = 0n;
+
+  for (let epoch = 0; epoch <= latestClosedEpoch; epoch += 1) {
+    const key = `${activeNetwork.key}:${activeNetwork.network.chainId}:${epoch}`;
+    const alreadyClaimed =
+      role === "provider"
+        ? stateStore.hasProviderActiveEpochClaim(key)
+        : role === "verifier"
+          ? stateStore.hasVerifierActiveEpochClaim(key)
+          : stateStore.hasProviderActiveEpochClaim(key) || stateStore.hasVerifierActiveEpochClaim(key);
+
+    if (alreadyClaimed) {
+      continue;
+    }
+
+    const active = await contracts.nodeRegistry!.isNodeActiveAt(contracts.wallet.address, epoch);
+    if (!active) {
+      continue;
+    }
+
+    const activeCount = BigInt(await contracts.nodeRegistry!.activeNodeCount(epoch));
+    if (activeCount === 0n) {
+      continue;
+    }
+
+    const emission = BigInt(await contracts.rewardDistributor.activeEpochEmission(epoch));
+    reward += emission / activeCount;
+    epochs += 1;
+  }
+
+  return { epochs, reward };
+}
+
+async function estimateProviderWorkClaims(
+  activeNetwork: HealthyEvmNetwork,
+  contracts: ReturnType<typeof buildContracts>,
+  stateStore: FileStateStore,
+  state: StoredNodeState
+): Promise<{ jobs: number; reward: bigint }> {
+  let jobs = 0;
+  let reward = 0n;
+
+  for (const [jobKey, entry] of Object.entries(state.provider.submittedJobs)) {
+    if (entry.networkKey !== activeNetwork.key || stateStore.hasProviderWorkRewardClaim(jobKey)) {
+      continue;
+    }
+
+    const jobId = parseJobId(jobKey);
+    if (jobId === null) {
+      continue;
+    }
+
+    try {
+      const [, providerReward] = await contracts.rewardDistributor.getRewardBreakdown(jobId);
+      reward += BigInt(providerReward);
+      jobs += 1;
+    } catch {
+      // Not yet claimable or not yet recorded on-chain.
+    }
+  }
+
+  return { jobs, reward };
+}
+
+async function estimateVerifierWorkClaims(
+  activeNetwork: HealthyEvmNetwork,
+  contracts: ReturnType<typeof buildContracts>,
+  stateStore: FileStateStore,
+  state: StoredNodeState
+): Promise<{ jobs: number; reward: bigint }> {
+  let jobs = 0;
+  let reward = 0n;
+
+  for (const [jobKey, entry] of Object.entries(state.verifier.participatedJobs)) {
+    if (
+      entry.networkKey !== activeNetwork.key ||
+      entry.action.startsWith("rejected") ||
+      stateStore.hasVerifierWorkRewardClaim(jobKey)
+    ) {
+      continue;
+    }
+
+    const jobId = parseJobId(jobKey);
+    if (jobId === null) {
+      continue;
+    }
+
+    try {
+      const [, , verifierRewardTotal] = await contracts.rewardDistributor.getRewardBreakdown(jobId);
+      const approvedVerifiers = (await contracts.verifier.getApprovedVerifiers(jobId)) as string[];
+      if (approvedVerifiers.length === 0) {
+        continue;
+      }
+      reward += BigInt(verifierRewardTotal) / BigInt(approvedVerifiers.length);
+      jobs += 1;
+    } catch {
+      // Not yet claimable or not yet recorded on-chain.
+    }
+  }
+
+  return { jobs, reward };
+}
+
+function parseJobId(jobKey: string): number | null {
+  const value = Number(jobKey.split(":").at(-1));
+  return Number.isFinite(value) ? value : null;
 }
 
 function printParticipationSummary(
@@ -117,6 +305,10 @@ function summarizeWindow(recordedAtValues: string[]): { today: number; week: num
     week,
     all: recordedAtValues.length
   };
+}
+
+function formatUnixSeconds(value: number): string {
+  return new Date(value * 1000).toLocaleString();
 }
 
 void main();

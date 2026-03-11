@@ -2,6 +2,7 @@ node_modules/
 dist/
 .koinara-node/
 .koinara-node-v2/
+.koinara-node-v2-openclaw/
 .koinara-node-v2-local/
 config/*.local.json
 .env.local

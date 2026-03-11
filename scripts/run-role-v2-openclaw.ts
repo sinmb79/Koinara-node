@@ -18,11 +18,11 @@ const roleCommands: Record<RoleCommand, string[]> = {
 };
 
 if (role !== "provider" && role !== "verifier") {
-  fail("Usage: tsx scripts/run-role-v2.ts <provider|verifier> <doctor|status|once|claim|start>");
+  fail("Usage: tsx scripts/run-role-v2-openclaw.ts <provider|verifier> <doctor|status|once|claim|start>");
 }
 
 if (!command || !(command in roleCommands)) {
-  fail("Usage: tsx scripts/run-role-v2.ts <provider|verifier> <doctor|status|once|claim|start>");
+  fail("Usage: tsx scripts/run-role-v2-openclaw.ts <provider|verifier> <doctor|status|once|claim|start>");
 }
 
 const envFile = resolve(repoRoot, `.env.${role}.local`);
@@ -30,7 +30,7 @@ if (!existsSync(envFile)) {
   fail(`Missing ${envFile}. Create it before running ${role}.`);
 }
 
-const nodeConfigFile = resolve(repoRoot, "node.config.v2-mainnet.json");
+const nodeConfigFile = resolve(repoRoot, "node.config.v2-openclaw-mainnet.json");
 if (!existsSync(nodeConfigFile)) {
   fail(`Missing ${nodeConfigFile}.`);
 }
@@ -57,7 +57,7 @@ const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
     NODE_ENV_FILE: envFile,
     NODE_CONFIG_FILE: nodeConfigFile,
     NODE_NETWORKS_FILE: networksFile,
-    NODE_STATE_DIR: resolve(repoRoot, ".koinara-node-v2", role)
+    NODE_STATE_DIR: resolve(repoRoot, ".koinara-node-v2-openclaw", role)
   }
 });
 

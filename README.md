@@ -28,6 +28,7 @@ Worldland v2 is live and includes:
 
 - `provider`, `verifier`, or `both` roles
 - `ollama` and `openai` inference backends
+- built-in `openclaw` provider backend through the local OpenClaw CLI
 - direct contract interaction through `ethers v6`
 - terminal-first `setup`, `doctor`, `status`, and long-running `node` commands
 - local filesystem and HTTP discovery roots for off-chain manifests and submission receipts
@@ -66,7 +67,14 @@ npm run node:once
 - `npm run provider:v2:doctor`
 - `npm run provider:v2:status`
 - `npm run provider:v2:once`
+- `npm run provider:v2:claim`
 - `npm run provider:v2:start`
+- `npm run provider:v2:openclaw:doctor`
+- `npm run provider:v2:openclaw:status`
+- `npm run provider:v2:openclaw:once`
+- `npm run provider:v2:openclaw:claim`
+- `npm run provider:v2:openclaw:start`
+- `npm run scan:export:v2`
 - `npm run verifier:doctor`
 - `npm run verifier:status`
 - `npm run verifier:once`
@@ -74,7 +82,13 @@ npm run node:once
 - `npm run verifier:v2:doctor`
 - `npm run verifier:v2:status`
 - `npm run verifier:v2:once`
+- `npm run verifier:v2:claim`
 - `npm run verifier:v2:start`
+- `npm run verifier:v2:openclaw:doctor`
+- `npm run verifier:v2:openclaw:status`
+- `npm run verifier:v2:openclaw:once`
+- `npm run verifier:v2:openclaw:claim`
+- `npm run verifier:v2:openclaw:start`
 - `npm run test`
 
 To install Windows logon auto-start for both roles:
@@ -102,6 +116,7 @@ The example files are:
 - `.env.example`
 - `node.config.example.json`
 - `node.config.v2-mainnet.json`
+- `node.config.v2-openclaw-mainnet.json`
 
 If you want local-only overrides without editing the tracked network profiles, create:
 
@@ -123,7 +138,19 @@ If you want to run `provider` and `verifier` as separate processes on one machin
 For the live Worldland v2 path, use:
 
 - `npm run provider:v2:start`
+- `npm run provider:v2:claim`
 - `npm run verifier:v2:start`
+- `npm run verifier:v2:claim`
+
+If you want OpenClaw to produce provider-side inference content, set:
+
+- `provider.backend = "openclaw"`
+- `provider.openclaw.agent = "main"` or another OpenClaw agent id
+- `provider.openclaw.local = true` for embedded local execution
+
+To refresh the public scan snapshot used by the Koinara website:
+
+- `npm run scan:export:v2`
 
 ## Off-chain Discovery
 
