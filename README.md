@@ -67,6 +67,7 @@ See [docs/network-spec.md](docs/network-spec.md) for the canonical format.
 ## Docs
 
 - [docs/node-setup.md](docs/node-setup.md)
+- [docs/operator-checklist.md](docs/operator-checklist.md)
 - [docs/how-to-earn.md](docs/how-to-earn.md)
 - [docs/network-spec.md](docs/network-spec.md)
 - [docs/protocol-compatibility.md](docs/protocol-compatibility.md)
