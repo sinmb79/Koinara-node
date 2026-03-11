@@ -79,6 +79,7 @@ See [docs/network-spec.md](docs/network-spec.md) for the canonical format.
 
 - [docs/node-setup.md](docs/node-setup.md)
 - [docs/home-test-quickstart.md](docs/home-test-quickstart.md)
+- [docs/home-test-checklist.md](docs/home-test-checklist.md)
 - [docs/operator-checklist.md](docs/operator-checklist.md)
 - [docs/how-to-earn.md](docs/how-to-earn.md)
 - [docs/network-spec.md](docs/network-spec.md)

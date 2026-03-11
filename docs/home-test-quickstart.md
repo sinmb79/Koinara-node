@@ -4,6 +4,8 @@ This is the shortest safe path for testing `Koinara-node` on your home computer 
 
 Do not put secrets into Git history. Only write them to local files that are already gitignored.
 
+For the full manual verification list, see [docs/home-test-checklist.md](./home-test-checklist.md).
+
 ## 1. Clone and install
 
 ```bash
