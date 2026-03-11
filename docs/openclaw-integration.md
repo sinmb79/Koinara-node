@@ -4,6 +4,10 @@
 
 `Koinara-node` now supports a built-in `openclaw` provider backend.
 
+If you want the step-by-step GitHub guide with screenshots, start here:
+
+- [OpenClaw Setup Guide](./openclaw-setup.md)
+
 That means you can configure the node so that:
 
 - `Koinara-node` keeps control of job polling, response hashing, wallet signing, submission, verification, and reward settlement

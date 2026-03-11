@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">OpenClaw step 2</title>
+  <desc id="desc">Install the bundled Koinara OpenClaw skill into the user skill directory.</desc>
+  <rect width="1600" height="980" fill="#060b14"/>
+  <rect x="70" y="84" width="1460" height="812" rx="34" fill="#09131d" stroke="#263548" stroke-width="2"/>
+  <rect x="70" y="84" width="1460" height="74" rx="34" fill="#121c2a"/>
+  <circle cx="118" cy="121" r="11" fill="#e56b6f"/>
+  <circle cx="152" cy="121" r="11" fill="#f0b35a"/>
+  <circle cx="186" cy="121" r="11" fill="#33e2d6"/>
+  <text x="230" y="128" fill="#91a2c1" font-family="IBM Plex Mono, monospace" font-size="30">Install OpenClaw skill</text>
+  <text x="130" y="240" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="27">$ powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1</text>
+  <text x="130" y="330" fill="#8ea0bf" font-family="IBM Plex Mono, monospace" font-size="25">Installed OpenClaw skill:</text>
+  <text x="130" y="374" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">C:\Users\&lt;current-user&gt;\.openclaw\skills\koinara-node</text>
+  <rect x="118" y="450" width="1350" height="264" rx="22" fill="#0d1826" stroke="#29425c"/>
+  <text x="150" y="514" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="24">koinara-node / SKILL.md</text>
+  <text x="150" y="568" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">- verify local OpenClaw agent</text>
+  <text x="150" y="612" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">- run provider:v2:openclaw:doctor</text>
+  <text x="150" y="656" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">- start and claim the provider runtime</text>
+  <text x="130" y="800" fill="#f3ab2c" font-family="IBM Plex Mono, monospace" font-size="24">Restart OpenClaw or reload skills after copying the package.</text>
+</svg>

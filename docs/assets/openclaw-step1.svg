@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">OpenClaw step 1</title>
+  <desc id="desc">Verify that the local OpenClaw agent replies before using it as a provider backend.</desc>
+  <rect width="1600" height="980" fill="#060b14"/>
+  <rect x="70" y="84" width="1460" height="812" rx="34" fill="#09131d" stroke="#263548" stroke-width="2"/>
+  <rect x="70" y="84" width="1460" height="74" rx="34" fill="#121c2a"/>
+  <circle cx="118" cy="121" r="11" fill="#e56b6f"/>
+  <circle cx="152" cy="121" r="11" fill="#f0b35a"/>
+  <circle cx="186" cy="121" r="11" fill="#33e2d6"/>
+  <text x="230" y="128" fill="#91a2c1" font-family="IBM Plex Mono, monospace" font-size="30">OpenClaw local check</text>
+  <text x="130" y="250" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="27">$ openclaw agent --agent main --local --json --message "Reply with exactly OK"</text>
+  <rect x="118" y="330" width="1350" height="348" rx="22" fill="#0d1826" stroke="#29425c"/>
+  <text x="150" y="394" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">{</text>
+  <text x="188" y="438" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">"payloads": [{"text": "OK"}],</text>
+  <text x="188" y="482" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">"meta": {</text>
+  <text x="226" y="526" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">"agentMeta": {"provider": "openclaw", "model": "local"}</text>
+  <text x="188" y="570" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">}</text>
+  <text x="150" y="614" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">}</text>
+  <text x="130" y="760" fill="#f3ab2c" font-family="IBM Plex Mono, monospace" font-size="24">Only continue if this succeeds.</text>
+  <text x="130" y="806" fill="#f5f7fb" font-family="IBM Plex Mono, monospace" font-size="24">The provider backend shells out to the same OpenClaw CLI path.</text>
+</svg>
