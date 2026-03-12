@@ -1,5 +1,8 @@
 # Node Setup
 
+If you want the detailed Windows walkthrough with screenshots, use
+[docs/install-windows.md](./install-windows.md).
+
 ## Prerequisites
 
 - Node.js 20+

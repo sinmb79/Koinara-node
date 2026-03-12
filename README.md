@@ -74,6 +74,10 @@ If you want to install the bundled OpenClaw skill globally:
 powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
 ```
 
+If you want the detailed Windows walkthrough with screenshots, use:
+
+- [docs/install-windows.md](docs/install-windows.md)
+
 ## Commands
 
 - `npm run setup`
@@ -186,6 +190,7 @@ See [docs/network-spec.md](docs/network-spec.md) for the canonical format.
 
 ## Docs
 
+- [docs/install-windows.md](docs/install-windows.md)
 - [docs/node-setup.md](docs/node-setup.md)
 - [docs/openclaw-integration.md](docs/openclaw-integration.md)
 - [docs/home-test-quickstart.md](docs/home-test-quickstart.md)

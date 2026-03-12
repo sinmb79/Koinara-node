@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
+  <title id="title">Koinara node install step 3</title>
+  <desc id="desc">Run doctor and start the provider and verifier commands.</desc>
+  <rect width="1600" height="980" fill="#060b14"/>
+  <rect x="70" y="84" width="1460" height="812" rx="34" fill="#09131d" stroke="#263548" stroke-width="2"/>
+  <rect x="70" y="84" width="1460" height="74" rx="34" fill="#121c2a"/>
+  <circle cx="118" cy="121" r="11" fill="#e56b6f"/>
+  <circle cx="152" cy="121" r="11" fill="#f0b35a"/>
+  <circle cx="186" cy="121" r="11" fill="#33e2d6"/>
+  <text x="230" y="128" fill="#91a2c1" font-family="IBM Plex Mono, monospace" font-size="30">Doctor and start</text>
+  <text x="130" y="240" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="28">$ npm.cmd run provider:v2:doctor</text>
+  <text x="130" y="290" fill="#8ea0bf" font-family="IBM Plex Mono, monospace" font-size="24">wallet loaded ... worldland mainnet healthy ... contracts found</text>
+  <text x="130" y="356" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="28">$ npm.cmd run verifier:v2:doctor</text>
+  <text x="130" y="406" fill="#8ea0bf" font-family="IBM Plex Mono, monospace" font-size="24">wallet loaded ... worldland mainnet healthy ... verifier ready</text>
+  <text x="130" y="490" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="28">$ npm.cmd run provider:v2:start</text>
+  <text x="130" y="540" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Starting Koinara node as provider</text>
+  <text x="130" y="586" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Running pass on Worldland Seoul Mainnet ...</text>
+  <text x="130" y="668" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="28">$ npm.cmd run provider:v2:claim</text>
+  <text x="130" y="714" fill="#8ea0bf" font-family="IBM Plex Mono, monospace" font-size="24">Use claim only after the current epoch has closed.</text>
+  <rect x="118" y="778" width="1350" height="84" rx="20" fill="#0d1826" stroke="#2d4158"/>
+  <text x="150" y="826" fill="#f3ab2c" font-family="IBM Plex Mono, monospace" font-size="24">Tip</text>
+  <text x="240" y="826" fill="#f5f7fb" font-family="IBM Plex Mono, monospace" font-size="24">Run provider and verifier in separate PowerShell windows with separate .env files.</text>
+</svg>
