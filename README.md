@@ -78,6 +78,33 @@ If you want the detailed Windows walkthrough with screenshots, use:
 
 - [docs/install-windows.md](docs/install-windows.md)
 
+During `npm run setup`, you will be asked for:
+
+- role: `provider`, `verifier`, or `both`
+- network profile: `testnet` or `mainnet`
+- network selection mode: `priority-failover` or `all-healthy`
+
+What `network selection mode` means:
+
+- `priority-failover`
+  - use one healthy enabled EVM network at a time
+  - pick the highest-priority healthy network first
+  - fail over only if that network becomes unhealthy
+- `all-healthy`
+  - use every healthy enabled EVM network at the same time
+
+Recommended choice for most first-time operators:
+
+- if you are setting up a normal Worldland node, choose `priority-failover`
+- if you only enable one network, the two modes behave almost the same in practice
+
+Example for a simple live Worldland setup:
+
+- role: `both`
+- network profile: `mainnet`
+- network selection mode: `priority-failover`
+- enabled networks: `worldland`
+
 ## Commands
 
 - `npm run setup`
