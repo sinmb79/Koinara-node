@@ -63,6 +63,27 @@ During setup, you will generate or fill:
 - `node.config.json`
 - `.env.local`
 
+You will also be asked for:
+
+- `Network selection mode (priority-failover/all-healthy)`
+
+What it means:
+
+- `priority-failover`
+  - use one chain at a time
+  - the node picks the highest-priority healthy enabled network
+  - if that chain becomes unhealthy, the node fails over to the next healthy one
+- `all-healthy`
+  - use every healthy enabled network at the same time
+  - the node can process jobs across all healthy enabled EVM chains
+
+Recommended choice for most first-time operators:
+
+- if you only want to run on Worldland mainnet, choose `priority-failover`
+- if you explicitly want one node runtime to participate across multiple healthy EVM networks, choose `all-healthy`
+
+If only one network is enabled, both modes behave almost the same in practice.
+
 If you run provider and verifier separately on one machine, later create:
 
 - `.env.provider.local`

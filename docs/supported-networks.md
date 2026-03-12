@@ -14,6 +14,16 @@ These networks share the current EVM runtime path and can participate in:
 - `priority-failover` mode
 - `all-healthy` mode
 
+Mode meaning:
+
+- `priority-failover`
+  - choose one healthy enabled EVM network based on priority
+  - fail over only when the current one is unhealthy
+- `all-healthy`
+  - use all healthy enabled EVM networks together
+
+If you only enable one network such as Worldland mainnet, the difference is minimal.
+
 ## Prepared-only target
 
 - Solana

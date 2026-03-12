@@ -56,6 +56,17 @@ During setup you choose:
 - enabled networks by key
 - provider backend when provider mode is enabled
 
+Selection mode means:
+
+- `priority-failover`
+  - the node uses the highest-priority healthy enabled EVM network
+  - if that network fails, it switches to the next healthy one
+- `all-healthy`
+  - the node uses every healthy enabled EVM network at once
+
+For a simple Worldland-only setup, choose `priority-failover`.
+If you only enable one network, the two modes are almost equivalent in practice.
+
 By default, setup now places runtime state, manifests, receipts, and artifacts under
 `~/.koinara-node` so they do not depend on where the repository was cloned.
 

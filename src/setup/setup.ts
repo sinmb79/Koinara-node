@@ -39,6 +39,10 @@ export async function main(): Promise<void> {
       "Select network profile (testnet/mainnet)",
       defaults.networkProfile
     )) as NetworkProfileName;
+    console.log(
+      "Selection mode help: priority-failover = use one highest-priority healthy chain, " +
+        "all-healthy = use every healthy enabled chain."
+    );
     const selectionMode = (await ask(
       rl,
       "Network selection mode (priority-failover/all-healthy)",
