@@ -84,9 +84,8 @@ During `npm run setup`, you will be asked for:
 - network profile: `testnet` or `mainnet`
 - network selection mode: `priority-failover` or `all-healthy`
 - enabled networks
-- provider backend: `ollama`, `openai`, or `openclaw` when provider mode is enabled
+- provider inference source: `openclaw` or local LLM via `ollama` when provider mode is enabled
 - supported job types: `Simple`, `General`, `Collective`
-- whether to connect the provider to an OpenClaw agent
 
 The setup wizard now uses interactive menus.
 
@@ -116,13 +115,19 @@ Example for a simple live Worldland setup:
 - network profile: `mainnet`
 - network selection mode: `priority-failover`
 - enabled networks: `worldland`
-- provider backend: `openclaw` if you want to connect an OpenClaw agent
+- provider inference source: choose either `OpenClaw agent` or `local LLM (Ollama)`
 
-If you answer `Yes` to the OpenClaw question during setup:
+If you choose `OpenClaw agent` during setup:
 
 - the node stores an OpenClaw-backed provider config
 - it uses the normal default CLI command `openclaw`
 - it can run a quick OpenClaw connection check before saving the config
+
+If you choose `local LLM (Ollama)` during setup:
+
+- the node stores an Ollama-backed provider config
+- it uses the normal default base URL `http://127.0.0.1:11434`
+- it can run a quick Ollama connection check before saving the config
 
 What `supported job types` means:
 

@@ -54,7 +54,7 @@ During setup you choose:
 - network profile: `testnet` or `mainnet`
 - selection mode: `priority-failover` or `all-healthy`
 - enabled networks by key
-- provider backend when provider mode is enabled
+- provider inference source when provider mode is enabled
 
 The setup wizard now uses interactive menus for these prompts.
 
@@ -74,7 +74,12 @@ Selection mode means:
 
 For a simple Worldland-only setup, choose `priority-failover`.
 If you only enable one network, the two modes are almost equivalent in practice.
-If you want to connect an OpenClaw agent, choose `openclaw` when the setup wizard asks for the provider backend.
+If provider mode is enabled, choose one inference source:
+
+- `OpenClaw agent`
+- `local LLM (Ollama)`
+
+The setup wizard treats one of these as required for provider participation.
 
 By default, setup now places runtime state, manifests, receipts, and artifacts under
 `~/.koinara-node` so they do not depend on where the repository was cloned.

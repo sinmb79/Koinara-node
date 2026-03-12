@@ -93,41 +93,63 @@ export async function main(): Promise<void> {
 
   let providerConfig: FileNodeConfig["provider"] | undefined;
   if (role === "provider" || role === "both") {
-    const connectOpenClaw = await askConfirm(
-      "Do you want to connect this provider to an OpenClaw agent?",
-      defaults.backend === "openclaw"
+    const backend = await askChoice<"ollama" | "openclaw">(
+      "Provider inference source",
+      [
+        {
+          value: "ollama",
+          label: "local LLM (Ollama)",
+          description: "Use a local model installed on this machine through Ollama."
+        },
+        {
+          value: "openclaw",
+          label: "OpenClaw agent",
+          description: "Use an OpenClaw agent on this machine as the provider inference source."
+        }
+      ],
+      defaults.backend === "openclaw" ? "openclaw" : "ollama"
     );
-    const backend = connectOpenClaw
-      ? "openclaw"
-      : await askChoice(
-          "Provider backend",
-          [
-            { value: "ollama", label: "ollama", description: "Use a local model through Ollama." },
-            { value: "openai", label: "openai", description: "Use the hosted OpenAI API." },
-            {
-              value: "openclaw",
-              label: "openclaw",
-              description: "Connect an OpenClaw agent and let it drive provider-side inference."
-            }
-          ],
-          defaults.backend === "openclaw" ? "ollama" : defaults.backend
-        );
 
     if (backend === "ollama") {
+      const customizeOllama = await askConfirm(
+        "Do you want to customize Ollama settings now?",
+        false
+      );
+      const ollamaBaseUrl = customizeOllama
+        ? await ask("Ollama base URL", "http://127.0.0.1:11434")
+        : "http://127.0.0.1:11434";
+      const ollamaModel = customizeOllama
+        ? await ask("Ollama model", "llama3.1")
+        : "llama3.1";
+      const verifyOllama = await askConfirm(
+        "Run a quick Ollama connection check now?",
+        true
+      );
+      if (verifyOllama) {
+        const check = await testOllamaConnection({
+          baseUrl: ollamaBaseUrl,
+          model: ollamaModel
+        });
+        if (check.ok) {
+          console.log(`Ollama check passed: ${check.summary}`);
+        } else {
+          console.warn(`Ollama check failed: ${check.summary}`);
+          const continueAnyway = await askConfirm(
+            "Continue setup anyway and save the Ollama config?",
+            true
+          );
+          if (!continueAnyway) {
+            throw new Error("Setup cancelled until Ollama connection is fixed.");
+          }
+        }
+      }
+
       providerConfig = {
         backend: "ollama",
         supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
         ollama: {
-          baseUrl: await ask("Ollama base URL", "http://127.0.0.1:11434"),
-          model: await ask("Ollama model", "llama3.1")
-        }
-      };
-    } else if (backend === "openai") {
-      providerConfig = {
-        backend: "openai",
-        supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
-        openai: {
-          model: await ask("OpenAI model", "gpt-4.1-mini")
+          baseUrl: ollamaBaseUrl,
+          model: ollamaModel
         }
       };
     } else {
@@ -437,6 +459,40 @@ async function testOpenClawConnection(options: {
       });
     });
   });
+}
+
+async function testOllamaConnection(options: {
+  baseUrl: string;
+  model: string;
+}): Promise<{ ok: true; summary: string } | { ok: false; summary: string }> {
+  try {
+    const response = await fetch(`${options.baseUrl.replace(/\/$/, "")}/api/tags`);
+    if (!response.ok) {
+      return {
+        ok: false,
+        summary: `Ollama returned HTTP ${response.status}`
+      };
+    }
+
+    const payload = (await response.json()) as {
+      models?: Array<{ name?: string }>;
+    };
+    const models = payload.models ?? [];
+    const hasRequestedModel = models.some((entry) => entry.name?.trim() === options.model.trim());
+    const summary = hasRequestedModel
+      ? `server responded and model ${options.model} is available`
+      : `server responded but model ${options.model} was not listed`;
+
+    return {
+      ok: hasRequestedModel,
+      summary
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      summary: error instanceof Error ? error.message : String(error)
+    };
+  }
 }
 
 function writeJson(path: string, value: unknown): void {
