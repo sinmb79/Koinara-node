@@ -44,13 +44,13 @@ This installs the skill into:
 
 ## Step 3. Run the OpenClaw-backed provider path
 
-If you choose `Yes` during `npm.cmd run setup` when asked whether this provider should connect to an OpenClaw agent, setup will:
+If you choose `OpenClaw agent` during `npm.cmd run setup`, setup will:
 
 - enable the OpenClaw provider backend
 - use the default CLI command `openclaw`
 - use the default agent id `main`
 - default to local execution on the current machine
-- offer to run a quick OpenClaw connection check before saving
+- run a quick OpenClaw connection check before saving
 
 You only need to customize the CLI path if `openclaw` is not already available on your shell path.
 
@@ -58,14 +58,27 @@ Use the dedicated Worldland v2 commands:
 
 ```powershell
 npm.cmd run provider:v2:openclaw:doctor
+npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 npm.cmd run provider:v2:openclaw:claim
 ```
+
+What each command is for:
+
+- `provider:v2:openclaw:doctor`
+  - configuration and network readiness
+- `provider:v2:openclaw:check`
+  - one-shot human-readable check for connection state, recent jobs, current epoch, next epoch close, and claimable rewards
+- `provider:v2:openclaw:start`
+  - live runtime that receives jobs and submits responses
+- `provider:v2:openclaw:claim`
+  - claim rewards after the current epoch closes
 
 If you also run a verifier:
 
 ```powershell
 npm.cmd run verifier:v2:doctor
+npm.cmd run verifier:v2:openclaw:check
 npm.cmd run verifier:v2:start
 npm.cmd run verifier:v2:claim
 ```

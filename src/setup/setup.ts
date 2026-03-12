@@ -536,20 +536,31 @@ function printSetupSummary(input: {
   console.log("- Check the saved config with: npm run doctor");
   if (input.role === "provider" || input.role === "both") {
     if (input.providerBackend === "openclaw") {
+      console.log("- Provider connection status: npm run provider:v2:openclaw:status");
       console.log("- Provider start: npm run provider:v2:openclaw:start");
       console.log("- Provider claim after epoch close: npm run provider:v2:openclaw:claim");
       console.log(
         '- Manual OpenClaw check: openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"'
       );
+      console.log("- When jobs are processed, the running terminal will print lines like:");
+      console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
     } else {
+      console.log("- Provider connection status: npm run provider:v2:status");
       console.log("- Provider start: npm run provider:v2:start");
       console.log("- Provider claim after epoch close: npm run provider:v2:claim");
+      console.log("- When jobs are processed, the running terminal will print lines like:");
+      console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
     }
   }
   if (input.role === "verifier" || input.role === "both") {
+    console.log("- Verifier connection status: npm run verifier:v2:status");
     console.log("- Verifier start: npm run verifier:v2:start");
     console.log("- Verifier claim after epoch close: npm run verifier:v2:claim");
+    console.log("- When jobs are processed, the running terminal will print lines like:");
+    console.log("  worldland: verifier approved job <jobId>");
+    console.log("  worldland: verifier finalized PoI for job <jobId>");
   }
+  console.log("- Status commands also show the current epoch and the next epoch close time.");
 }
 
 function writeJson(path: string, value: unknown): void {

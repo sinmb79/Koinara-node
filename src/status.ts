@@ -51,6 +51,8 @@ async function main(): Promise<void> {
   console.log("\nCached participation summary:");
   printParticipationSummary("Provider submissions", state.provider.submittedJobs);
   printParticipationSummary("Verifier participations", state.verifier.participatedJobs);
+  printRecentProviderActivity(state);
+  printRecentVerifierActivity(state);
   console.log(`State file present: ${existsSync(config.statePath) ? "yes" : "no"}`);
 }
 
@@ -283,6 +285,44 @@ function printParticipationSummary(
   }
 }
 
+function printRecentProviderActivity(state: StoredNodeState): void {
+  const entries = Object.entries(state.provider.submittedJobs)
+    .sort(([, left], [, right]) => new Date(right.recordedAt).getTime() - new Date(left.recordedAt).getTime())
+    .slice(0, 5);
+
+  if (entries.length === 0) {
+    console.log("- Recent provider jobs: none yet");
+    return;
+  }
+
+  console.log("- Recent provider jobs:");
+  for (const [jobKey, entry] of entries) {
+    const jobId = parseJobId(jobKey);
+    console.log(
+      `  - ${entry.networkKey} job ${jobId ?? "unknown"} at ${formatIso(entry.recordedAt)} tx=${entry.txHash}`
+    );
+  }
+}
+
+function printRecentVerifierActivity(state: StoredNodeState): void {
+  const entries = Object.entries(state.verifier.participatedJobs)
+    .sort(([, left], [, right]) => new Date(right.recordedAt).getTime() - new Date(left.recordedAt).getTime())
+    .slice(0, 5);
+
+  if (entries.length === 0) {
+    console.log("- Recent verifier actions: none yet");
+    return;
+  }
+
+  console.log("- Recent verifier actions:");
+  for (const [jobKey, entry] of entries) {
+    const jobId = parseJobId(jobKey);
+    console.log(
+      `  - ${entry.networkKey} job ${jobId ?? "unknown"} action=${entry.action} at ${formatIso(entry.recordedAt)} tx=${entry.txHash}`
+    );
+  }
+}
+
 function summarizeWindow(recordedAtValues: string[]): { today: number; week: number; all: number } {
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
@@ -309,6 +349,10 @@ function summarizeWindow(recordedAtValues: string[]): { today: number; week: num
 
 function formatUnixSeconds(value: number): string {
   return new Date(value * 1000).toLocaleString();
+}
+
+function formatIso(value: string): string {
+  return new Date(value).toLocaleString();
 }
 
 void main();

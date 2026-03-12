@@ -172,6 +172,7 @@ What `supported job types` means:
 - `npm run provider:v2:claim`
 - `npm run provider:v2:start`
 - `npm run provider:v2:openclaw:doctor`
+- `npm run provider:v2:openclaw:check`
 - `npm run provider:v2:openclaw:status`
 - `npm run provider:v2:openclaw:once`
 - `npm run provider:v2:openclaw:claim`
@@ -187,6 +188,7 @@ What `supported job types` means:
 - `npm run verifier:v2:claim`
 - `npm run verifier:v2:start`
 - `npm run verifier:v2:openclaw:doctor`
+- `npm run verifier:v2:openclaw:check`
 - `npm run verifier:v2:openclaw:status`
 - `npm run verifier:v2:openclaw:once`
 - `npm run verifier:v2:openclaw:claim`

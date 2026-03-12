@@ -58,6 +58,33 @@ On Windows PowerShell, use:
 npm.cmd run provider:v2:openclaw:doctor
 ```
 
+If the operator asks in chat:
+
+- `연결상태 확인해줘`
+- `Is Koinara connected?`
+- `보상 언제 들어와?`
+- `최근 어떤 job을 처리했어?`
+
+prefer this single command first:
+
+```powershell
+npm.cmd run provider:v2:openclaw:check
+```
+
+That command runs both:
+
+- `doctor`
+- `status`
+
+and the `status` output includes:
+
+- whether the node is using the configured network and wallet
+- current epoch
+- next epoch close time
+- claimable reward estimates
+- recent provider jobs
+- recent verifier actions
+
 ## Step 3. Start the provider runtime
 
 ```bash
@@ -77,6 +104,12 @@ This keeps:
 - job polling
 - OpenClaw-backed provider inference
 - on-chain submission
+
+While this is running, the terminal shows live job activity such as:
+
+- `provider submitted response for job <jobId>`
+- `verifier approved job <jobId>`
+- `verifier finalized PoI for job <jobId>`
 
 ## Step 4. Claim after epoch close
 
