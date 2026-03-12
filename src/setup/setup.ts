@@ -25,6 +25,11 @@ interface ChoiceOption<T extends string> {
   description?: string;
 }
 
+interface ConnectionCheckResult {
+  ok: boolean;
+  summary: string;
+}
+
 type OpenClawThinkingLevel = NonNullable<
   NonNullable<NonNullable<FileNodeConfig["provider"]>["openclaw"]>["thinking"]
 >;
@@ -99,6 +104,8 @@ export async function main(): Promise<void> {
   );
 
   let providerConfig: FileNodeConfig["provider"] | undefined;
+  let providerCheck: ConnectionCheckResult | undefined;
+  let providerSourceSummary: string | undefined;
   if (role === "provider" || role === "both") {
     const backend = await askChoice<"ollama" | "openclaw">(
       "Provider inference source",
@@ -120,17 +127,18 @@ export async function main(): Promise<void> {
     if (backend === "ollama") {
       const ollamaBaseUrl = "http://127.0.0.1:11434";
       const ollamaModel = "llama3.1";
+      providerSourceSummary = "local LLM (Ollama)";
       console.log(
         "Using default Ollama settings: baseUrl=http://127.0.0.1:11434, model=llama3.1"
       );
-      const check = await testOllamaConnection({
+      providerCheck = await testOllamaConnection({
         baseUrl: ollamaBaseUrl,
         model: ollamaModel
       });
-      if (check.ok) {
-        console.log(`Ollama check passed: ${check.summary}`);
+      if (providerCheck.ok) {
+        console.log(`Ollama check passed: ${providerCheck.summary}`);
       } else {
-        console.warn(`Ollama check failed: ${check.summary}`);
+        console.warn(`Ollama check failed: ${providerCheck.summary}`);
         const continueAnyway = await askConfirm(
           "Continue setup anyway and save the Ollama config?",
           true
@@ -154,20 +162,21 @@ export async function main(): Promise<void> {
       const openclawThinking: OpenClawThinkingLevel = "low";
       const openclawTimeoutSeconds = 120;
       const openclawLocal = true;
+      providerSourceSummary = "OpenClaw agent";
       console.log(
         "Using default OpenClaw settings: command=openclaw, agent=main, local=true, thinking=low"
       );
-      const check = await testOpenClawConnection({
+      providerCheck = await testOpenClawConnection({
         command: openclawCommand,
         agent: openclawAgent,
         thinking: openclawThinking,
         timeoutSeconds: openclawTimeoutSeconds,
         local: openclawLocal
       });
-      if (check.ok) {
-        console.log(`OpenClaw check passed: ${check.summary}`);
+      if (providerCheck.ok) {
+        console.log(`OpenClaw check passed: ${providerCheck.summary}`);
       } else {
-        console.warn(`OpenClaw check failed: ${check.summary}`);
+        console.warn(`OpenClaw check failed: ${providerCheck.summary}`);
         const continueAnyway = await askConfirm(
           "Continue setup anyway and save the OpenClaw config?",
           true
@@ -230,7 +239,16 @@ export async function main(): Promise<void> {
   runtimeDirs.forEach((dir) => mkdirSync(dir, { recursive: true }));
 
   console.log("Wrote node.config.json and .env.local");
-  console.log("You can now run: npm run doctor");
+  printSetupSummary({
+    role,
+    networkProfile,
+    selectionMode,
+    enabledNetworks,
+    providerSourceSummary,
+    providerCheck,
+    walletConfigured: Boolean(privateKeyOrPath),
+    providerBackend: providerConfig?.backend
+  });
 }
 
 function readShortcutProfile(argv: string[]): SetupShortcut | undefined {
@@ -436,7 +454,7 @@ async function testOpenClawConnection(options: {
 async function testOllamaConnection(options: {
   baseUrl: string;
   model: string;
-}): Promise<{ ok: true; summary: string } | { ok: false; summary: string }> {
+}): Promise<ConnectionCheckResult> {
   try {
     const response = await fetch(`${options.baseUrl.replace(/\/$/, "")}/api/tags`);
     if (!response.ok) {
@@ -464,6 +482,73 @@ async function testOllamaConnection(options: {
       ok: false,
       summary: error instanceof Error ? error.message : String(error)
     };
+  }
+}
+
+function printSetupSummary(input: {
+  role: NodeRole;
+  networkProfile: NetworkProfileName;
+  selectionMode: string;
+  enabledNetworks: string[];
+  providerSourceSummary?: string;
+  providerCheck?: ConnectionCheckResult;
+  walletConfigured: boolean;
+  providerBackend?: FileNodeConfig["provider"] extends infer T
+    ? T extends { backend: infer B }
+      ? B
+      : never
+    : never;
+}): void {
+  console.log("");
+  console.log("Setup summary:");
+  console.log(`- Role: ${input.role}`);
+  console.log(`- Network profile: ${input.networkProfile}`);
+  console.log(`- Selection mode: ${input.selectionMode}`);
+  console.log(`- Enabled networks: ${input.enabledNetworks.join(", ")}`);
+  if (input.providerSourceSummary) {
+    console.log(`- Provider inference source: ${input.providerSourceSummary}`);
+  }
+  if (input.providerCheck) {
+    console.log(
+      `- Provider connection check: ${input.providerCheck.ok ? "ready" : "not ready"} (${input.providerCheck.summary})`
+    );
+  }
+  console.log(
+    `- Wallet for on-chain actions: ${input.walletConfigured ? "configured" : "not configured yet"}`
+  );
+  console.log("");
+  console.log("What this means:");
+  console.log("- Setup saved the config files, but the node is not running yet.");
+  console.log("- Protocol connection starts only after you run doctor/start commands.");
+  if (input.providerSourceSummary) {
+    console.log(
+      `- Provider communication path: ${input.providerSourceSummary} -> Koinara-node -> Worldland manifests/receipts -> Worldland contracts`
+    );
+  }
+  console.log("- Active rewards accrue after registration and heartbeat on-chain.");
+  console.log("- Work rewards accrue after accepted jobs.");
+  console.log("- KOIN is not minted immediately. In v2, rewards are claimable after the epoch closes.");
+  console.log("");
+  console.log("Recommended next steps:");
+  if (!input.walletConfigured) {
+    console.log("- Add WALLET_PRIVATE_KEY or WALLET_KEYFILE to .env.local before starting the node.");
+  }
+  console.log("- Check the saved config with: npm run doctor");
+  if (input.role === "provider" || input.role === "both") {
+    if (input.providerBackend === "openclaw") {
+      console.log("- Provider start: npm run provider:v2:openclaw:start");
+      console.log("- Provider claim after epoch close: npm run provider:v2:openclaw:claim");
+      console.log(
+        '- Manual OpenClaw check: openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"'
+      );
+    } else {
+      console.log("- Provider start: npm run provider:v2:start");
+      console.log("- Provider claim after epoch close: npm run provider:v2:claim");
+    }
+  }
+  if (input.role === "verifier" || input.role === "both") {
+    console.log("- Verifier start: npm run verifier:v2:start");
+    console.log("- Verifier claim after epoch close: npm run verifier:v2:claim");
   }
 }
 

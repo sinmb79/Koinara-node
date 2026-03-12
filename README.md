@@ -130,6 +130,12 @@ If you choose `OpenClaw agent` during setup:
 - it uses the default agent id `main`
 - it runs a quick OpenClaw connection check before saving the config
 
+Manual OpenClaw check command:
+
+```powershell
+openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+```
+
 If you choose `local LLM (Ollama)` during setup:
 
 - the node stores an Ollama-backed provider config

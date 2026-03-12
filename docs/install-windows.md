@@ -109,6 +109,12 @@ If you choose `OpenClaw agent` during setup:
 - the default mode is local execution on the current machine
 - setup runs a quick OpenClaw connection check before it saves the config
 
+Manual OpenClaw check command:
+
+```powershell
+openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+```
+
 If you choose `local LLM (Ollama)` during setup:
 
 - Koinara uses the normal default base URL `http://127.0.0.1:11434`
