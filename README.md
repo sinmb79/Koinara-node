@@ -143,6 +143,23 @@ It shows:
 - recent verifier actions
 - claimable reward estimates
 
+If you reboot the computer later, you do not need to install again.
+Start again from the repo folder:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
+
+If you also run a verifier, open a second PowerShell window:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run verifier:v2:status
+npm.cmd run verifier:v2:start
+```
+
 If you choose `OpenClaw agent` during setup:
 
 - the node stores an OpenClaw-backed provider config

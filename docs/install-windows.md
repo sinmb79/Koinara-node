@@ -209,6 +209,34 @@ What success looks like after start:
   - `worldland: verifier finalized PoI for job <jobId>`
 - status or check commands show the current epoch and next epoch close time
 
+## Step 3A. After reboot, start again
+
+You do not need to install again after a reboot.
+
+For an OpenClaw-backed provider:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
+
+For a verifier in a second PowerShell window:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run verifier:v2:status
+npm.cmd run verifier:v2:start
+```
+
+If you use a local LLM provider instead of OpenClaw:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:status
+npm.cmd run provider:v2:start
+```
+
 ## Step 4. Claim after the current epoch closes
 
 Koinara v2 protocol rewards are not minted immediately.

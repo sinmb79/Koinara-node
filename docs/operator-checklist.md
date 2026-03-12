@@ -45,7 +45,8 @@ It is written to minimize guesswork and to separate:
   - confirm the API key is valid
   - confirm the selected model is accessible
 - If using `openclaw`:
-  - confirm `openclaw agent --agent main --local --json --message "Reply with OK"` succeeds
+  - on Windows PowerShell, confirm `openclaw.cmd --agent main --local --json --message "Reply with OK"` succeeds
+  - on macOS / Linux, confirm `openclaw agent --agent main --local --json --message "Reply with OK"` succeeds
   - confirm the selected OpenClaw agent id is available
   - confirm OpenClaw can reach the intended local model provider
 
@@ -260,6 +261,14 @@ npm run node
 
 The local state cache is only a recovery hint.
 Correctness is still chain-derived, so the node should skip jobs already submitted or already participated in by the same wallet.
+
+If the machine reboots and you are using an OpenClaw-backed provider, restart with:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
 
 ## 10. Mainnet Readiness Gate
 

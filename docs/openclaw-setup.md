@@ -121,6 +121,14 @@ What success looks like:
 - `provider:v2:openclaw:check` shows current epoch, next epoch close, recent jobs, and reward state
 - `provider:v2:openclaw:start` stays running and prints live job activity when work arrives
 
+After a reboot, restart from the repo folder:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
+
 If you are in `C:\Windows\System32`, do not run the script from there.
 Move to the repo first:
 
