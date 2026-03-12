@@ -1,167 +1,162 @@
 # OpenClaw Setup Guide
 
-This is the GitHub-readable step-by-step path for connecting OpenClaw to `Koinara-node`.
-
-Use this guide when you want:
+This guide is for operators who want:
 
 - OpenClaw to generate provider-side inference
 - `Koinara-node` to keep control of registration, heartbeat, submission, verification, and reward claims
 
-## Step 1. Verify the local OpenClaw agent
+The intended flow is now:
 
-First, make sure this computer can launch the OpenClaw CLI at all:
+1. finish `npm.cmd run setup`
+2. run one OpenClaw connection command
+3. check
+4. start
 
-```powershell
-openclaw.cmd --help
-```
-
-If that fails, do not continue yet. Koinara can save an OpenClaw-backed config, but the provider cannot become ready until the `openclaw.cmd` command exists on this computer.
-
-Run this first:
-
-```powershell
-openclaw.cmd agent --agent main --local --json --message "Reply with exactly OK"
-```
-
-![OpenClaw local check](./assets/openclaw-step1.svg)
-
-Do not continue until this returns a valid JSON payload.
-
-That result proves two different things:
-
-- the `openclaw.cmd` command exists on this computer
-- the local `main` agent actually answers
-
-## Step 2. Install the bundled Koinara OpenClaw skill
+## Step 1. Finish the base node setup first
 
 From the repo root:
 
-### Windows PowerShell
-
 ```powershell
 cd $env:USERPROFILE\koinara-node
-powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
+npm.cmd run setup
 ```
 
-### macOS / Linux
+During setup, you do **not** need to connect OpenClaw anymore.
+That is a separate step now.
 
-```bash
-bash ./scripts/install-openclaw-skill.sh
+## Step 2. Connect OpenClaw in one step
+
+Run:
+
+```powershell
+npm.cmd run openclaw:connect
 ```
+
+This one command does the OpenClaw-side onboarding for Koinara:
+
+- configures the provider backend as `openclaw`
+- writes the v2 runtime config
+- installs the bundled Koinara OpenClaw skill
+- checks that `openclaw.cmd` exists
+- checks that the local `main` agent replies
+
+If the command ends with all checks ready, OpenClaw is connected to the Koinara provider path on this computer.
 
 ![OpenClaw skill install](./assets/openclaw-step2.svg)
 
-This installs the skill into:
+## Step 3. Check the OpenClaw-backed provider path
 
-- Windows: `C:\Users\<user>\.openclaw\skills\koinara-node`
-- macOS / Linux: `~/.openclaw/skills/koinara-node`
-
-## Step 3. Run the OpenClaw-backed provider path
-
-If you choose `OpenClaw agent` during `npm.cmd run setup`, setup will:
-
-- enable the OpenClaw provider backend
-- use the default CLI command `openclaw.cmd` on Windows PowerShell
-- use the default agent id `main`
-- default to local execution on the current machine
-- run a quick OpenClaw connection check before saving
-- try to install the bundled Koinara OpenClaw skill automatically
-
-Important:
-
-- `OpenClaw skill installed`
-  - means the Koinara helper skill was copied into `~/.openclaw/skills/koinara-node`
-- `OpenClaw connection ready`
-  - means the `openclaw.cmd` command exists and the local agent answered
-
-Those are not the same state.
-
-If setup ends with `spawn openclaw ENOENT`, it means:
-
-- the skill may already be installed
-- but OpenClaw CLI is still missing from this computer's shell path
-- so the provider is configured but not ready yet
-
-You only need to customize the CLI path if `openclaw.cmd` is not already available on your shell path.
-
-Use the dedicated Worldland v2 commands:
+Run:
 
 ```powershell
-npm.cmd run provider:v2:openclaw:doctor
 npm.cmd run provider:v2:openclaw:check
-npm.cmd run provider:v2:openclaw:start
-npm.cmd run provider:v2:openclaw:claim
 ```
 
-What each command is for:
+This is the human-readable status command.
+It shows:
 
-- `provider:v2:openclaw:doctor`
-  - configuration and network readiness
-- `provider:v2:openclaw:check`
-  - one-shot human-readable check for connection state, recent jobs, current epoch, next epoch close, and claimable rewards
-- `provider:v2:openclaw:start`
-  - live runtime that receives jobs and submits responses
-- `provider:v2:openclaw:claim`
-  - claim rewards after the current epoch closes
+- whether the provider config is ready
+- current epoch
+- next epoch close time
+- recent jobs
+- reward state
 
-Recommended first-time order after setup:
+If you want the low-level OpenClaw-only check:
 
 ```powershell
-cd $env:USERPROFILE\koinara-node
-openclaw.cmd --help
-openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
-npm.cmd run provider:v2:openclaw:check
+npm.cmd run openclaw:check
+```
+
+That checks:
+
+- OpenClaw CLI
+- installed Koinara OpenClaw skill
+- local `main` agent response
+
+## Step 4. Start the provider runtime
+
+Run:
+
+```powershell
 npm.cmd run provider:v2:openclaw:start
 ```
 
-What success looks like:
+This keeps:
 
-- `openclaw.cmd --help` prints CLI help
-- `openclaw.cmd agent ...` returns JSON
-- `provider:v2:openclaw:check` shows current epoch, next epoch close, recent jobs, and reward state
-- `provider:v2:openclaw:start` stays running and prints live job activity when work arrives
+- node registration
+- heartbeat
+- job polling
+- OpenClaw-backed provider inference
+- on-chain provider submission
 
-After a reboot, restart from the repo folder:
+When jobs are processed, the terminal prints lines like:
 
-```powershell
-cd $env:USERPROFILE\koinara-node
-npm.cmd run provider:v2:openclaw:check
-npm.cmd run provider:v2:openclaw:start
-```
-
-If you are in `C:\Windows\System32`, do not run the script from there.
-Move to the repo first:
-
-```powershell
-cd $env:USERPROFILE\koinara-node
-```
+- `worldland: provider submitted response for job <jobId> (<responseHash>)`
 
 If you also run a verifier:
 
 ```powershell
-npm.cmd run verifier:v2:doctor
-npm.cmd run verifier:v2:openclaw:check
+npm.cmd run verifier:v2:status
 npm.cmd run verifier:v2:start
-npm.cmd run verifier:v2:claim
 ```
 
 ![OpenClaw-backed provider flow](./assets/openclaw-step3.svg)
 
-## What OpenClaw does
+## Step 5. Claim after epoch close
 
-- agent orchestration
-- prompt execution
-- provider-side response generation
+Provider claim:
 
-## What Koinara-node still does
+```powershell
+npm.cmd run provider:v2:openclaw:claim
+```
 
-- node registration
-- heartbeat
-- manifest and receipt handling
-- canonical response hashing
-- provider submission
-- verifier actions
-- active and work reward claims
+Verifier claim:
+
+```powershell
+npm.cmd run verifier:v2:claim
+```
+
+KOIN is not minted immediately in v2.
+Rewards become claimable after the current epoch closes.
+
+## After reboot
+
+You do not need to install again.
+
+Run:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
+
+## Troubleshooting
+
+### `openclaw:connect` says CLI is not ready
+
+Run:
+
+```powershell
+openclaw.cmd --help
+npm.cmd run openclaw:check
+```
+
+### You only want to reinstall the skill
+
+Run:
+
+```powershell
+npm.cmd run openclaw:install
+```
+
+### You are in `C:\Windows\System32`
+
+Move back to the repo first:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+```
 
 ## Important rule
 

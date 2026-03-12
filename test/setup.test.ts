@@ -11,7 +11,6 @@ test("buildEnvTemplate supports inline private keys", () => {
     repoRoot,
     role: "provider",
     networkProfile: "testnet",
-    openAiEnabled: false,
     walletInput: "0x1234",
     stateDir: join(repoRoot, ".koinara-node", "state")
   });
@@ -23,13 +22,12 @@ test("buildEnvTemplate supports inline private keys", () => {
   assert.equal(env.WALLET_KEYFILE, undefined);
 });
 
-test("buildEnvTemplate enables OpenAI key when needed", () => {
+test("buildEnvTemplate leaves wallet placeholders when setup skips the wallet", () => {
   const repoRoot = mkdtempSync(join(tmpdir(), "koinara-node-setup-"));
   const env = buildEnvTemplate({
     repoRoot,
     role: "both",
     networkProfile: "mainnet",
-    openAiEnabled: true,
     walletInput: "",
     stateDir: join(repoRoot, ".koinara-node", "state")
   });
@@ -39,5 +37,4 @@ test("buildEnvTemplate enables OpenAI key when needed", () => {
   assert.equal(env.NODE_STATE_DIR, join(repoRoot, ".koinara-node", "state"));
   assert.equal(env.WALLET_PRIVATE_KEY, "");
   assert.equal(env.WALLET_KEYFILE, "");
-  assert.equal(env.OPENAI_API_KEY, "");
 });

@@ -36,7 +36,7 @@ export function loadRuntimeConfig(options?: {
 
   const fileConfig = JSON.parse(readFileSync(nodeConfigPath, "utf8")) as FileNodeConfig;
   const networkProfile = (process.env.NETWORK_PROFILE ?? fileConfig.networkProfile) as NetworkProfileName;
-  const role = (process.env.NODE_ROLE ?? inferRole(fileConfig)) as NodeRole;
+  const role = (process.env.NODE_ROLE ?? fileConfig.role ?? inferRole(fileConfig)) as NodeRole;
   const networksPath = resolveNetworksPath(repoRoot, networkProfile);
   const networksProfileData = JSON.parse(readFileSync(networksPath, "utf8")) as NetworksProfile;
   const walletResolution = loadWallet(repoRoot, options?.allowMissingWallet === true);

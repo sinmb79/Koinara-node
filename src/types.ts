@@ -80,6 +80,7 @@ export interface NetworksProfile {
 }
 
 export interface FileNodeConfig {
+  role?: NodeRole;
   networkProfile: NetworkProfileName;
   selectionMode: NetworkSelectionMode;
   enabledNetworks: string[];

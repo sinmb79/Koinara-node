@@ -43,7 +43,7 @@ const envFile = resolveEnvFile(repoRoot, role);
 
 const nodeConfigFile = resolve(repoRoot, "node.config.v2-openclaw-mainnet.json");
 if (!existsSync(nodeConfigFile)) {
-  fail(`Missing ${nodeConfigFile}.`);
+  fail(`Missing ${nodeConfigFile}. Run npm run setup first, then run npm run openclaw:connect.`);
 }
 
 const networksFile = resolve(repoRoot, "config", "networks.mainnet.v2.json");

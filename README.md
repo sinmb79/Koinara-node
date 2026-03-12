@@ -43,8 +43,6 @@ Worldland v2 is live and includes:
 ```bash
 npm install
 npm run setup
-npm run doctor
-npm run node
 ```
 
 On Windows PowerShell, prefer a user-owned path and `npm.cmd` if `npm.ps1` is blocked:
@@ -56,54 +54,41 @@ npm.cmd install
 npm.cmd run setup
 ```
 
-You can also use the built-in bootstrap helper:
+The first-time flow is now:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\bootstrap-windows.ps1
-```
-
-For a single pass instead of a daemon loop:
-
-```bash
-npm run node:once
-```
-
-If you want to install the bundled OpenClaw skill globally:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
-```
+1. run `setup` for the base node config
+2. connect exactly one provider inference source
+   - `npm.cmd run openclaw:connect`
+   - `npm.cmd run ollama:connect`
+3. run `check`
+4. run `start`
 
 If you want the detailed Windows walkthrough with screenshots, use:
 
 - [docs/install-windows.md](docs/install-windows.md)
 
-During `npm run setup`, you will be asked for:
+If you want the OpenClaw-only path, use:
+
+- [docs/openclaw-setup.md](docs/openclaw-setup.md)
+
+During `npm run setup`, you will be asked only for:
 
 - role: `provider`, `verifier`, or `both`
 - network profile: `testnet` or `mainnet`
 - network selection mode: `priority-failover` or `all-healthy`
 - enabled networks
-- provider inference source: `openclaw` or local LLM via `ollama` when provider mode is enabled
-- supported job types: `Simple`, `General`, `Collective`
+- runtime folder customization
+- wallet now or later
 
-The first-time wizard keeps runtime folders and polling on standard defaults unless you explicitly choose to customize advanced settings. It also lets you skip wallet entry and fill it later before starting the node.
+The wizard no longer tries to finish OpenClaw or Ollama inside setup.
 
-The setup wizard now uses interactive menus.
+The setup wizard uses interactive menus:
 
 - move with `Up` / `Down`
 - press `Enter` to choose
 - on multi-select screens, press `Space` to toggle and `Enter` to confirm
 
 This avoids typos like `mainet` during first-time setup.
-
-For most first-time operators:
-
-- choose `OpenClaw agent` if you want Koinara to use OpenClaw on this same computer
-- choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
-- after you choose one, setup applies the normal default local settings automatically
-- if you choose `OpenClaw agent`, setup also tries to install the bundled Koinara OpenClaw skill automatically
-- on Windows PowerShell, the safer OpenClaw command is usually `openclaw.cmd`
 
 What `network selection mode` means:
 
@@ -125,31 +110,23 @@ Example for a simple live Worldland setup:
 - network profile: `mainnet`
 - network selection mode: `priority-failover`
 - enabled networks: `worldland`
-- provider inference source: choose either `OpenClaw agent` or `local LLM (Ollama)`
 
-After setup, the most useful first command is:
+After `setup`, choose one provider path.
 
-```powershell
-npm.cmd run provider:v2:openclaw:check
-```
-
-It shows:
-
-- whether the node can read its config
-- whether the provider path is connected
-- current epoch
-- next epoch close time
-- recent provider jobs
-- recent verifier actions
-- claimable reward estimates
-
-If you reboot the computer later, you do not need to install again.
-Start again from the repo folder:
+OpenClaw path:
 
 ```powershell
-cd $env:USERPROFILE\koinara-node
+npm.cmd run openclaw:connect
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
+```
+
+Local LLM (Ollama) path:
+
+```powershell
+npm.cmd run ollama:connect
+npm.cmd run provider:v2:status
+npm.cmd run provider:v2:start
 ```
 
 If you also run a verifier, open a second PowerShell window:
@@ -160,70 +137,37 @@ npm.cmd run verifier:v2:status
 npm.cmd run verifier:v2:start
 ```
 
-If you choose `OpenClaw agent` during setup:
+What `openclaw:connect` does:
 
-- the node stores an OpenClaw-backed provider config
-- on Windows PowerShell it uses `openclaw.cmd`
-- on macOS / Linux it uses `openclaw`
-- it uses the default agent id `main`
-- it runs a quick OpenClaw connection check before saving the config
-- it tries to install the bundled OpenClaw skill automatically
-- it keeps the normal runtime folders and polling defaults unless you choose to customize them
+- configures the provider backend as `openclaw`
+- writes the v2 runtime config
+- installs the bundled Koinara OpenClaw skill
+- checks the OpenClaw CLI
+- checks that the local `main` agent replies
 
-Manual OpenClaw check command:
+What `ollama:connect` does:
 
-```powershell
-openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
-```
+- configures the provider backend as `ollama`
+- writes the v2 runtime config
+- checks `http://127.0.0.1:11434`
+- checks that model `llama3.1` is present
 
-What a good first-time result looks like after `npm.cmd run setup`:
-
-- `Provider connection check: ready`
-- `Wallet for on-chain actions: configured` or `not configured yet`
-- `Setup saved the config files, but the node is not running yet.`
-- a short list of next commands including `check`, `start`, and `claim`
-
-What `Provider connection check: not ready` means:
-
-- the bundled Koinara OpenClaw skill may already be installed
-- but the OpenClaw CLI is still not available from this PowerShell session
-- the config was saved, but OpenClaw itself is not ready yet
-
-If that happens, run these in order:
+If you reboot the computer later, you do not need to install again.
+Start again from the repo folder:
 
 ```powershell
 cd $env:USERPROFILE\koinara-node
-openclaw.cmd --help
-openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
 ```
 
-What those three commands tell you:
+For an Ollama-backed provider after reboot:
 
-- `openclaw.cmd --help`
-  - whether this computer can launch the OpenClaw CLI at all
-- `openclaw.cmd agent ...`
-  - whether the local OpenClaw agent actually answers
-- `npm.cmd run provider:v2:openclaw:check`
-  - whether Koinara-node is configured, which epoch is active, when the next epoch closes, what recent jobs were seen, and what rewards are currently claimable
-
-If you choose `local LLM (Ollama)` during setup:
-
-- the node stores an Ollama-backed provider config
-- it uses the normal default base URL `http://127.0.0.1:11434`
-- it uses the default model `llama3.1`
-- it runs a quick Ollama connection check before saving the config
-
-What `supported job types` means:
-
-- `Simple`
-  - fast, smaller jobs
-  - easiest starting point for a new operator
-- `General`
-  - normal multi-step jobs
-  - broader participation than `Simple`
-- `Collective`
-  - harder jobs that benefit from wider participation and stronger consensus
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run provider:v2:status
+npm.cmd run provider:v2:start
+```
 
 ## Commands
 

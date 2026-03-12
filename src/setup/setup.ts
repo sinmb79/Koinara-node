@@ -1,17 +1,10 @@
 import { checkbox, confirm, input as promptInput, select } from "@inquirer/prompts";
-import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { repoRootFrom } from "../config/loadConfig.js";
-import type {
-  FileNodeConfig,
-  InferenceBackendName,
-  JobTypeName,
-  NetworkProfileName,
-  NodeRole
-} from "../types.js";
+import type { FileNodeConfig, NetworkProfileName, NodeRole } from "../types.js";
 
 type SetupShortcut =
   | "provider-ollama"
@@ -25,22 +18,7 @@ interface ChoiceOption<T extends string> {
   description?: string;
 }
 
-interface ConnectionCheckResult {
-  ok: boolean;
-  summary: string;
-}
-
-interface SkillInstallResult {
-  ok: boolean;
-  summary: string;
-}
-
-type OpenClawThinkingLevel = NonNullable<
-  NonNullable<NonNullable<FileNodeConfig["provider"]>["openclaw"]>["thinking"]
->;
-
 const npmRunCommand = process.platform === "win32" ? "npm.cmd run" : "npm run";
-const defaultOpenClawCommand = process.platform === "win32" ? "openclaw.cmd" : "openclaw";
 
 export async function main(): Promise<void> {
   const repoRoot = repoRootFrom(import.meta.url);
@@ -58,37 +36,48 @@ export async function main(): Promise<void> {
   }
 
   console.log("Setup notes:");
-  console.log("- Provider mode requires one inference source: OpenClaw agent or local LLM (Ollama).");
-  console.log(
-    `- If OpenClaw is installed normally, the default command \`${defaultOpenClawCommand}\` is usually correct.`
-  );
-  console.log("- If Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct.");
+  console.log("- This step saves the base Koinara node config only.");
+  console.log("- Provider inference is connected afterward with one separate command.");
+  console.log(`- OpenClaw path: ${npmRunCommand} openclaw:connect`);
+  console.log(`- Local LLM path: ${npmRunCommand} ollama:connect`);
   console.log("- First-time setup keeps runtime folders and polling on safe defaults unless you choose to customize them.");
   console.log("- You can skip wallet setup now and fill it later before starting the node.");
   console.log("");
 
   const defaults = getShortcutDefaults(shortcut);
-  const role = await askChoice("Select role", [
-    { value: "provider", label: "provider", description: "Submit inference results and earn provider rewards." },
-    { value: "verifier", label: "verifier", description: "Review submissions, verify jobs, and earn verifier rewards." },
-    { value: "both", label: "both", description: "Run provider and verifier together on one machine." }
-  ], defaults.role);
-  const networkProfile = await askChoice("Select network profile", [
-    { value: "testnet", label: "testnet", description: "Safer for rehearsal and dry runs." },
-    { value: "mainnet", label: "mainnet", description: "Live network with real WLC gas and real KOIN rewards." }
-  ], defaults.networkProfile);
-  const selectionMode = await askChoice("Network selection mode", [
-    {
-      value: "priority-failover",
-      label: "priority-failover",
-      description: "Use one highest-priority healthy chain, then fail over if it becomes unhealthy."
-    },
-    {
-      value: "all-healthy",
-      label: "all-healthy",
-      description: "Use every healthy enabled chain at the same time."
-    }
-  ], "priority-failover");
+  const role = await askChoice(
+    "Select role",
+    [
+      { value: "provider", label: "provider", description: "Submit inference results and earn provider rewards." },
+      { value: "verifier", label: "verifier", description: "Review submissions, verify jobs, and earn verifier rewards." },
+      { value: "both", label: "both", description: "Run provider and verifier together on one machine." }
+    ],
+    defaults.role
+  );
+  const networkProfile = await askChoice(
+    "Select network profile",
+    [
+      { value: "testnet", label: "testnet", description: "Safer for rehearsal and dry runs." },
+      { value: "mainnet", label: "mainnet", description: "Live network with real WLC gas and real KOIN rewards." }
+    ],
+    defaults.networkProfile
+  );
+  const selectionMode = await askChoice(
+    "Network selection mode",
+    [
+      {
+        value: "priority-failover",
+        label: "priority-failover",
+        description: "Use one highest-priority healthy chain, then fail over if it becomes unhealthy."
+      },
+      {
+        value: "all-healthy",
+        label: "all-healthy",
+        description: "Use every healthy enabled chain at the same time."
+      }
+    ],
+    "priority-failover"
+  );
   const enabledNetworks = await askMultiChoice(
     "Enabled networks",
     [
@@ -101,115 +90,10 @@ export async function main(): Promise<void> {
     defaults.enabledNetworks
   );
 
-  let providerConfig: FileNodeConfig["provider"] | undefined;
-  let providerCheck: ConnectionCheckResult | undefined;
-  let providerSourceSummary: string | undefined;
-  let openClawSkillInstall: SkillInstallResult | undefined;
-  if (role === "provider" || role === "both") {
-    const backend = await askChoice<"ollama" | "openclaw">(
-      "Provider inference source",
-      [
-        {
-          value: "ollama",
-          label: "local LLM (Ollama)",
-          description: "Use a local model installed on this machine through Ollama."
-        },
-        {
-          value: "openclaw",
-          label: "OpenClaw agent",
-          description: "Use an OpenClaw agent on this machine as the provider inference source."
-        }
-      ],
-      defaults.backend === "openclaw" ? "openclaw" : "ollama"
-    );
-
-    if (backend === "ollama") {
-      const ollamaBaseUrl = "http://127.0.0.1:11434";
-      const ollamaModel = "llama3.1";
-      providerSourceSummary = "local LLM (Ollama)";
-      console.log(
-        "Using default Ollama settings: baseUrl=http://127.0.0.1:11434, model=llama3.1"
-      );
-      providerCheck = await testOllamaConnection({
-        baseUrl: ollamaBaseUrl,
-        model: ollamaModel
-      });
-      if (providerCheck.ok) {
-        console.log(`Ollama check passed: ${providerCheck.summary}`);
-      } else {
-        console.warn(`Ollama check failed: ${providerCheck.summary}`);
-        const continueAnyway = await askConfirm(
-          "Continue setup anyway and save the Ollama config?",
-          true
-        );
-        if (!continueAnyway) {
-          throw new Error("Setup cancelled until Ollama connection is fixed.");
-        }
-      }
-
-      providerConfig = {
-        backend: "ollama",
-        supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
-        ollama: {
-          baseUrl: ollamaBaseUrl,
-          model: ollamaModel
-        }
-      };
-    } else {
-      const openclawCommand = defaultOpenClawCommand;
-      const openclawAgent = "main";
-      const openclawThinking: OpenClawThinkingLevel = "low";
-      const openclawTimeoutSeconds = 120;
-      const openclawLocal = true;
-      providerSourceSummary = "OpenClaw agent";
-      console.log(
-        `Using default OpenClaw settings: command=${defaultOpenClawCommand}, agent=main, local=true, thinking=low`
-      );
-      providerCheck = await testOpenClawConnection({
-        command: openclawCommand,
-        agent: openclawAgent,
-        thinking: openclawThinking,
-        timeoutSeconds: openclawTimeoutSeconds,
-        local: openclawLocal
-      });
-      if (providerCheck.ok) {
-        console.log(`OpenClaw check passed: ${providerCheck.summary}`);
-      } else {
-        console.warn(`OpenClaw check failed: ${providerCheck.summary}`);
-        const continueAnyway = await askConfirm(
-          "Continue setup anyway and save the OpenClaw config?",
-          true
-        );
-        if (!continueAnyway) {
-          throw new Error("Setup cancelled until OpenClaw connection is fixed.");
-        }
-      }
-
-      openClawSkillInstall = await installOpenClawSkill(repoRoot);
-      if (openClawSkillInstall.ok) {
-        console.log(`OpenClaw skill install passed: ${openClawSkillInstall.summary}`);
-      } else {
-        console.warn(`OpenClaw skill install failed: ${openClawSkillInstall.summary}`);
-      }
-
-      providerConfig = {
-        backend: "openclaw",
-        supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
-        openclaw: {
-          command: openclawCommand,
-          agent: openclawAgent,
-          thinking: openclawThinking,
-          timeoutSeconds: openclawTimeoutSeconds,
-          local: openclawLocal
-        }
-      };
-    }
-  }
-
   let verifierConfig: FileNodeConfig["verifier"] | undefined;
   if (role === "verifier" || role === "both") {
     verifierConfig = {
-      supportedJobTypes: await askJobTypes(defaults.verifierJobTypes),
+      supportedJobTypes: ["Simple", "General", "Collective"],
       supportedSchemaHashes: []
     };
   }
@@ -239,16 +123,14 @@ export async function main(): Promise<void> {
     : "";
 
   const fileConfig: FileNodeConfig = {
+    role,
     networkProfile,
     selectionMode,
-    enabledNetworks: enabledNetworks
-      .map((entry) => entry.trim())
-      .filter(Boolean),
+    enabledNetworks: enabledNetworks.map((entry) => entry.trim()).filter(Boolean),
     pollIntervalMs,
     manifestRoots: [sharedRoot],
     receiptRoots: [sharedRoot],
     artifactOutputDir,
-    provider: providerConfig,
     verifier: verifierConfig
   };
 
@@ -259,7 +141,6 @@ export async function main(): Promise<void> {
       repoRoot,
       role,
       networkProfile,
-      openAiEnabled: providerConfig?.backend === "openai",
       walletInput: privateKeyOrPath,
       stateDir: resolve(runtimeRoot, "state")
     })
@@ -270,16 +151,12 @@ export async function main(): Promise<void> {
 
   console.log("Wrote node.config.json and .env.local");
   printSetupSummary({
-    repoRoot,
     role,
     networkProfile,
     selectionMode,
     enabledNetworks,
-    providerSourceSummary,
-    providerCheck,
-    openClawSkillInstall,
     walletConfigured: Boolean(privateKeyOrPath),
-    providerBackend: providerConfig?.backend,
+    providerPending: role === "provider" || role === "both",
     usedDefaultAdvancedSettings: !customizeAdvancedSettings
   });
 }
@@ -307,18 +184,12 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
   role: NodeRole;
   networkProfile: NetworkProfileName;
   enabledNetworks: string[];
-  backend: InferenceBackendName;
-  providerJobTypes: JobTypeName[];
-  verifierJobTypes: JobTypeName[];
 } {
   if (shortcut === "provider-openai") {
     return {
       role: "provider",
       networkProfile: "testnet",
-      enabledNetworks: ["worldland", "base"],
-      backend: "openai",
-      providerJobTypes: ["General", "Collective"],
-      verifierJobTypes: ["Simple", "General", "Collective"]
+      enabledNetworks: ["worldland", "base"]
     };
   }
 
@@ -326,10 +197,7 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
     return {
       role: "provider",
       networkProfile: "testnet",
-      enabledNetworks: ["worldland"],
-      backend: "openclaw",
-      providerJobTypes: ["Simple"],
-      verifierJobTypes: ["Simple", "General", "Collective"]
+      enabledNetworks: ["worldland"]
     };
   }
 
@@ -337,20 +205,14 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
     return {
       role: "verifier",
       networkProfile: "testnet",
-      enabledNetworks: ["worldland"],
-      backend: "ollama",
-      providerJobTypes: ["Simple"],
-      verifierJobTypes: ["Simple", "General", "Collective"]
+      enabledNetworks: ["worldland"]
     };
   }
 
   return {
     role: "provider",
     networkProfile: "testnet",
-    enabledNetworks: ["worldland"],
-    backend: "ollama",
-    providerJobTypes: ["Simple"],
-    verifierJobTypes: ["Simple", "General", "Collective"]
+    enabledNetworks: ["worldland"]
   };
 }
 
@@ -359,18 +221,6 @@ async function ask(question: string, fallback: string): Promise<string> {
     message: question,
     default: fallback
   });
-}
-
-async function askJobTypes(fallback: JobTypeName[]): Promise<JobTypeName[]> {
-  return (await askMultiChoice(
-    "Supported job types",
-    [
-      { value: "Simple", description: "Fast, small jobs. Lowest coordination cost and quickest path to a result." },
-      { value: "General", description: "Normal multi-step jobs. Broader participation and more verification than Simple." },
-      { value: "Collective", description: "Harder jobs that benefit from wider participation and stronger consensus." }
-    ],
-    fallback
-  )) as JobTypeName[];
 }
 
 async function askChoice<T extends string>(
@@ -418,183 +268,14 @@ async function askConfirm(question: string, fallback: boolean): Promise<boolean>
   });
 }
 
-async function testOpenClawConnection(options: {
-  command?: string;
-  agent: string;
-  thinking: OpenClawThinkingLevel;
-  timeoutSeconds: number;
-  local: boolean;
-}): Promise<{ ok: true; summary: string } | { ok: false; summary: string }> {
-  const command = options.command?.trim() || defaultOpenClawCommand;
-  const args = ["agent", "--agent", options.agent.trim() || "main", "--json"];
-
-  if (options.local) {
-    args.push("--local");
-  }
-
-  if (options.thinking?.trim()) {
-    args.push("--thinking", options.thinking.trim());
-  }
-
-  if (options.timeoutSeconds && Number.isFinite(options.timeoutSeconds)) {
-    args.push("--timeout", String(options.timeoutSeconds));
-  }
-
-  args.push("--message", "Reply with exactly OK");
-
-  return await new Promise((resolvePromise) => {
-    const child = spawn(command, args, {
-      stdio: ["ignore", "pipe", "pipe"],
-      env: process.env,
-      shell: process.platform === "win32"
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on("error", (error) => {
-      resolvePromise({
-        ok: false,
-        summary: error.message
-      });
-    });
-
-    child.on("close", (code) => {
-      if (code !== 0) {
-        resolvePromise({
-          ok: false,
-          summary: stderr.trim() || stdout.trim() || `OpenClaw exited with code ${code}`
-        });
-        return;
-      }
-
-      const body = stdout.trim() || stderr.trim();
-      resolvePromise({
-        ok: true,
-        summary: body ? "agent returned a JSON response" : "agent completed successfully"
-      });
-    });
-  });
-}
-
-async function testOllamaConnection(options: {
-  baseUrl: string;
-  model: string;
-}): Promise<ConnectionCheckResult> {
-  try {
-    const response = await fetch(`${options.baseUrl.replace(/\/$/, "")}/api/tags`);
-    if (!response.ok) {
-      return {
-        ok: false,
-        summary: `Ollama returned HTTP ${response.status}`
-      };
-    }
-
-    const payload = (await response.json()) as {
-      models?: Array<{ name?: string }>;
-    };
-    const models = payload.models ?? [];
-    const hasRequestedModel = models.some((entry) => entry.name?.trim() === options.model.trim());
-    const summary = hasRequestedModel
-      ? `server responded and model ${options.model} is available`
-      : `server responded but model ${options.model} was not listed`;
-
-    return {
-      ok: hasRequestedModel,
-      summary
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      summary: error instanceof Error ? error.message : String(error)
-    };
-  }
-}
-
-async function installOpenClawSkill(repoRoot: string): Promise<SkillInstallResult> {
-  const isWindows = process.platform === "win32";
-  const scriptPath = isWindows
-    ? resolve(repoRoot, "scripts", "install-openclaw-skill.ps1")
-    : resolve(repoRoot, "scripts", "install-openclaw-skill.sh");
-
-  if (!existsSync(scriptPath)) {
-    return {
-      ok: false,
-      summary: `missing installer script: ${scriptPath}`
-    };
-  }
-
-  const command = isWindows ? "powershell" : "bash";
-  const args = isWindows
-    ? ["-ExecutionPolicy", "Bypass", "-File", scriptPath]
-    : [scriptPath];
-
-  return await new Promise((resolvePromise) => {
-    const child = spawn(command, args, {
-      cwd: repoRoot,
-      stdio: ["ignore", "pipe", "pipe"],
-      env: process.env
-    });
-
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on("data", (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on("error", (error) => {
-      resolvePromise({
-        ok: false,
-        summary: error.message
-      });
-    });
-
-    child.on("close", (code) => {
-      if ((code ?? 1) !== 0) {
-        resolvePromise({
-          ok: false,
-          summary: stderr.trim() || stdout.trim() || `installer exited with code ${code ?? 1}`
-        });
-        return;
-      }
-
-      resolvePromise({
-        ok: true,
-        summary: stdout.trim() || "installed bundled OpenClaw skill"
-      });
-    });
-  });
-}
-
 function printSetupSummary(input: {
-  repoRoot: string;
   role: NodeRole;
   networkProfile: NetworkProfileName;
   selectionMode: string;
   enabledNetworks: string[];
-  providerSourceSummary?: string;
-  providerCheck?: ConnectionCheckResult;
-  openClawSkillInstall?: SkillInstallResult;
   walletConfigured: boolean;
   usedDefaultAdvancedSettings: boolean;
-  providerBackend?: FileNodeConfig["provider"] extends infer T
-    ? T extends { backend: infer B }
-      ? B
-      : never
-    : never;
+  providerPending: boolean;
 }): void {
   console.log("");
   console.log("Setup summary:");
@@ -602,18 +283,8 @@ function printSetupSummary(input: {
   console.log(`- Network profile: ${input.networkProfile}`);
   console.log(`- Selection mode: ${input.selectionMode}`);
   console.log(`- Enabled networks: ${input.enabledNetworks.join(", ")}`);
-  if (input.providerSourceSummary) {
-    console.log(`- Provider inference source: ${input.providerSourceSummary}`);
-  }
-  if (input.providerCheck) {
-    console.log(
-      `- Provider connection check: ${input.providerCheck.ok ? "ready" : "not ready"} (${input.providerCheck.summary})`
-    );
-  }
-  if (input.openClawSkillInstall) {
-    console.log(
-      `- OpenClaw skill install: ${input.openClawSkillInstall.ok ? "installed" : "not installed"} (${input.openClawSkillInstall.summary})`
-    );
+  if (input.providerPending) {
+    console.log("- Provider inference source: not connected yet");
   }
   console.log(
     `- Wallet for on-chain actions: ${input.walletConfigured ? "configured" : "not configured yet"}`
@@ -623,29 +294,18 @@ function printSetupSummary(input: {
   );
   console.log("");
   console.log("Current state:");
-  if (input.providerCheck?.ok) {
-    console.log("- Provider backend check passed on this computer.");
-  } else if (input.providerBackend === "openclaw" && input.providerCheck) {
-    if (input.providerCheck.summary.includes("ENOENT")) {
-      console.log("- OpenClaw skill was installed, but the `openclaw` command was not found on this computer yet.");
-      console.log("- This means setup saved the config, but OpenClaw CLI is not ready in your shell path.");
-    } else {
-      console.log(`- OpenClaw is configured, but the connection check still failed: ${input.providerCheck.summary}`);
-    }
-  } else if (input.providerCheck) {
-    console.log(`- Provider backend is configured, but the connection check still failed: ${input.providerCheck.summary}`);
+  if (input.providerPending) {
+    console.log("- Provider mode is enabled, but the inference source is not connected yet.");
+    console.log("- Choose exactly one next: OpenClaw or local LLM (Ollama).");
   }
   if (!input.walletConfigured) {
     console.log("- Wallet is still empty, so the node cannot send on-chain transactions until you add it.");
   }
   console.log("");
   console.log("What this means:");
-  console.log("- Setup saved the config files, but the node is not running yet.");
-  console.log("- Protocol connection starts only after you run doctor/start commands.");
-  if (input.providerSourceSummary) {
-    console.log(
-      `- Provider communication path: ${input.providerSourceSummary} -> Koinara-node -> Worldland manifests/receipts -> Worldland contracts`
-    );
+  console.log("- Setup saved the base node config files, but the node is not running yet.");
+  if (input.providerPending) {
+    console.log("- Provider mode still needs one connection step before doctor/start can succeed.");
   }
   console.log("- Active rewards accrue after registration and heartbeat on-chain.");
   console.log("- Work rewards accrue after accepted jobs.");
@@ -655,40 +315,20 @@ function printSetupSummary(input: {
   if (!input.walletConfigured) {
     console.log("- Add WALLET_PRIVATE_KEY or WALLET_KEYFILE to .env.local before starting the node.");
   }
-  console.log(`- Check the saved config with: ${npmRunCommand} doctor`);
-  if (input.role === "provider" || input.role === "both") {
-    if (input.providerBackend === "openclaw") {
-      console.log(`- Confirm OpenClaw CLI exists: ${defaultOpenClawCommand} --help`);
-      console.log(
-        `- Confirm the local OpenClaw agent replies: ${defaultOpenClawCommand} agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"`
-      );
-      console.log(`- Provider check (connection + epoch + recent jobs + rewards): ${npmRunCommand} provider:v2:openclaw:check`);
-      console.log(`- Provider start: ${npmRunCommand} provider:v2:openclaw:start`);
-      console.log(`- Provider claim after epoch close: ${npmRunCommand} provider:v2:openclaw:claim`);
-      console.log(
-        `- OpenClaw skill install (manual fallback): powershell -ExecutionPolicy Bypass -File ${resolve(
-          input.repoRoot,
-          "scripts",
-          "install-openclaw-skill.ps1"
-        )}`
-      );
-      console.log("- When jobs are processed, the running terminal will print lines like:");
-      console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
-    } else {
-      console.log(`- Provider connection status: ${npmRunCommand} provider:v2:status`);
-      console.log(`- Provider start: ${npmRunCommand} provider:v2:start`);
-      console.log(`- Provider claim after epoch close: ${npmRunCommand} provider:v2:claim`);
-      console.log("- When jobs are processed, the running terminal will print lines like:");
-      console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
-    }
+  if (input.providerPending) {
+    console.log(`- Connect OpenClaw in one step: ${npmRunCommand} openclaw:connect`);
+    console.log(`- Or connect a local LLM in one step: ${npmRunCommand} ollama:connect`);
+    console.log(`- After OpenClaw connect: ${npmRunCommand} provider:v2:openclaw:check`);
+    console.log(`- After OpenClaw connect: ${npmRunCommand} provider:v2:openclaw:start`);
+    console.log(`- After Ollama connect: ${npmRunCommand} provider:v2:status`);
+    console.log(`- After Ollama connect: ${npmRunCommand} provider:v2:start`);
+  } else {
+    console.log(`- Check the saved config with: ${npmRunCommand} doctor`);
   }
   if (input.role === "verifier" || input.role === "both") {
-    console.log(`- Verifier check (connection + epoch + recent jobs + rewards): ${npmRunCommand} verifier:v2:status`);
+    console.log(`- Verifier check: ${npmRunCommand} verifier:v2:status`);
     console.log(`- Verifier start: ${npmRunCommand} verifier:v2:start`);
     console.log(`- Verifier claim after epoch close: ${npmRunCommand} verifier:v2:claim`);
-    console.log("- When jobs are processed, the running terminal will print lines like:");
-    console.log("  worldland: verifier approved job <jobId>");
-    console.log("  worldland: verifier finalized PoI for job <jobId>");
   }
   console.log("- Status commands also show the current epoch and the next epoch close time.");
 }
@@ -709,7 +349,6 @@ export function buildEnvTemplate(input: {
   repoRoot: string;
   role: NodeRole;
   networkProfile: NetworkProfileName;
-  openAiEnabled: boolean;
   walletInput: string;
   stateDir: string;
 }): Record<string, string | undefined> {
@@ -729,10 +368,6 @@ export function buildEnvTemplate(input: {
       console.warn(`Warning: key file does not exist yet: ${input.walletInput}`);
     }
     values.WALLET_KEYFILE = input.walletInput;
-  }
-
-  if (input.openAiEnabled) {
-    values.OPENAI_API_KEY = "";
   }
 
   return values;

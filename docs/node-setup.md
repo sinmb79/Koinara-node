@@ -54,7 +54,6 @@ During setup you choose:
 - network profile: `testnet` or `mainnet`
 - selection mode: `priority-failover` or `all-healthy`
 - enabled networks by key
-- provider inference source when provider mode is enabled
 
 The first-time wizard keeps runtime folders and polling on standard defaults unless you explicitly choose to customize advanced settings. It also lets you skip wallet entry and fill it later before starting the node.
 
@@ -64,7 +63,7 @@ The setup wizard now uses interactive menus for these prompts.
 - press `Enter` to choose one option
 - on multi-select screens, press `Space` to toggle and `Enter` to confirm
 
-That reduces typos during setup and makes OpenClaw selection much easier on a fresh machine.
+That reduces typos during setup and keeps the base node install simple on a fresh machine.
 
 Selection mode means:
 
@@ -76,12 +75,10 @@ Selection mode means:
 
 For a simple Worldland-only setup, choose `priority-failover`.
 If you only enable one network, the two modes are almost equivalent in practice.
-If provider mode is enabled, choose one inference source:
+If provider mode is enabled, connect one inference source after setup:
 
-- `OpenClaw agent`
-- `local LLM (Ollama)`
-
-The setup wizard treats one of these as required for provider participation and applies the normal local defaults automatically.
+- `npm.cmd run openclaw:connect`
+- `npm.cmd run ollama:connect`
 
 By default, setup now places runtime state, manifests, receipts, and artifacts under
 `~/.koinara-node` so they do not depend on where the repository was cloned.
@@ -123,6 +120,7 @@ npm run verifier:v2:claim
 For the built-in OpenClaw provider path, use:
 
 ```bash
+npm run openclaw:connect
 npm run provider:v2:openclaw:check
 npm run provider:v2:openclaw:doctor
 npm run provider:v2:openclaw:start
@@ -184,6 +182,6 @@ The current supported paths are:
 - `Koinara-node` for actual provider / verifier participation and on-chain transactions
 - the bundled Koinara OpenClaw skill under `skills/koinara-node/`
 
-If setup ends with `spawn openclaw ENOENT`, it means the skill may be installed but the OpenClaw CLI is still not available in this computer's shell path.
+If `npm run openclaw:connect` ends with an OpenClaw CLI error, it means the skill may be installed but the OpenClaw CLI is still not available in this computer's shell path.
 
 In Windows PowerShell, prefer `openclaw.cmd` for manual checks.

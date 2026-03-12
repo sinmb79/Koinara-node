@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import type { JobManifest } from "../types.js";
 import type { InferenceBackend, InferenceResult } from "./inference.js";
+import { defaultOpenClawCommand, resolveOpenClawInvocation } from "./openclawCli.js";
 
 type OpenClawPayload = {
   text?: string;
@@ -17,8 +18,6 @@ type OpenClawResponse = {
     };
   };
 };
-
-const defaultOpenClawCommand = process.platform === "win32" ? "openclaw.cmd" : "openclaw";
 
 export interface OpenClawBackendOptions {
   command?: string;
@@ -57,7 +56,9 @@ export class OpenClawBackend implements InferenceBackend {
   }
 
   private invokeAgent(prompt: string): Promise<OpenClawResponse> {
-    const command = this.options.command?.trim() || defaultOpenClawCommand;
+    const invocation = resolveOpenClawInvocation(
+      this.options.command?.trim() || defaultOpenClawCommand
+    );
     const args = ["agent", "--agent", this.options.agent?.trim() || "main", "--json"];
 
     if (this.options.local !== false) {
@@ -80,10 +81,10 @@ export class OpenClawBackend implements InferenceBackend {
     args.push("--message", prompt);
 
     return new Promise((resolvePromise, reject) => {
-      const child = spawn(command, args, {
+      const child = spawn(invocation.command, [...invocation.prefixArgs, ...args], {
         stdio: ["ignore", "pipe", "pipe"],
         env: process.env,
-        shell: process.platform === "win32"
+        shell: invocation.shell
       });
 
       let stdout = "";

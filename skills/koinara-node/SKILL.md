@@ -1,6 +1,6 @@
 ---
 name: koinara-node
-description: Run Koinara-node with OpenClaw as the local provider backend and manage setup, doctor, start, and claim flows.
+description: Connect OpenClaw to Koinara-node, check provider status, run the Worldland v2 provider path, and claim rewards.
 metadata:
   openclaw:
     user-invocable: true
@@ -15,8 +15,9 @@ Use this skill when the operator wants to connect OpenClaw to Koinara as a real 
 
 ## What this skill is for
 
-- verifying that the local `openclaw` CLI works
-- configuring `Koinara-node` to use `provider.backend = "openclaw"`
+- connecting OpenClaw to Koinara with the one-step `openclaw:connect` flow
+- checking whether the local `main` agent replies
+- checking whether Koinara is connected and ready
 - running the Worldland v2 provider path
 - claiming rewards after the current epoch closes
 
@@ -28,55 +29,45 @@ Use this skill when the operator wants to connect OpenClaw to Koinara as a real 
 
 ## Required local files
 
-- `node.config.v2-openclaw-mainnet.json`
-- `.env.provider.local`
-- optionally `.env.verifier.local`
+- `node.config.json` from `npm run setup`
+- `.env.local` or `.env.provider.local`
+- `node.config.v2-openclaw-mainnet.json` after `npm run openclaw:connect`
 
 Do not commit wallet keys or RPC secrets.
 
-## Step 1. Verify OpenClaw locally
+## Step 1. Connect OpenClaw to Koinara
 
 Run:
 
-```bash
-openclaw agent --agent main --local --json --message "Reply with exactly OK"
+```powershell
+npm.cmd run openclaw:connect
 ```
 
-If this fails, stop and fix OpenClaw first.
+This one command:
+
+- installs the bundled Koinara OpenClaw skill
+- checks the OpenClaw CLI
+- checks the local `main` agent
+- writes the OpenClaw-backed v2 config
 
 ## Step 2. Verify the Koinara OpenClaw path
 
 From the repo root, run:
 
-```bash
-npm run provider:v2:openclaw:doctor
-```
-
-On Windows PowerShell, use:
-
-```powershell
-npm.cmd run provider:v2:openclaw:doctor
-```
-
-If the operator asks in chat:
-
-- `연결상태 확인해줘`
-- `Is Koinara connected?`
-- `보상 언제 들어와?`
-- `최근 어떤 job을 처리했어?`
-
-prefer this single command first:
-
 ```powershell
 npm.cmd run provider:v2:openclaw:check
 ```
 
-That command runs both:
+If the operator asks in chat:
 
-- `doctor`
-- `status`
+- `Is Koinara connected?`
+- `연결상태 확인해줘`
+- `보상 언제 들어와?`
+- `최근 어떤 job을 처리했어?`
 
-and the `status` output includes:
+prefer this single command first.
+
+That command shows:
 
 - whether the node is using the configured network and wallet
 - current epoch
@@ -85,13 +76,13 @@ and the `status` output includes:
 - recent provider jobs
 - recent verifier actions
 
-## Step 3. Start the provider runtime
+If the operator wants the lower-level OpenClaw-only check:
 
-```bash
-npm run provider:v2:openclaw:start
+```powershell
+npm.cmd run openclaw:check
 ```
 
-Windows PowerShell:
+## Step 3. Start the provider runtime
 
 ```powershell
 npm.cmd run provider:v2:openclaw:start
@@ -108,16 +99,8 @@ This keeps:
 While this is running, the terminal shows live job activity such as:
 
 - `provider submitted response for job <jobId>`
-- `verifier approved job <jobId>`
-- `verifier finalized PoI for job <jobId>`
 
 ## Step 4. Claim after epoch close
-
-```bash
-npm run provider:v2:openclaw:claim
-```
-
-Windows PowerShell:
 
 ```powershell
 npm.cmd run provider:v2:openclaw:claim
@@ -127,16 +110,8 @@ npm.cmd run provider:v2:openclaw:claim
 
 If the operator also runs a verifier:
 
-```bash
-npm run verifier:v2:doctor
-npm run verifier:v2:start
-npm run verifier:v2:claim
-```
-
-Windows PowerShell:
-
 ```powershell
-npm.cmd run verifier:v2:doctor
+npm.cmd run verifier:v2:status
 npm.cmd run verifier:v2:start
 npm.cmd run verifier:v2:claim
 ```
