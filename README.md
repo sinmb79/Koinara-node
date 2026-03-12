@@ -83,6 +83,11 @@ During `npm run setup`, you will be asked for:
 - role: `provider`, `verifier`, or `both`
 - network profile: `testnet` or `mainnet`
 - network selection mode: `priority-failover` or `all-healthy`
+- enabled networks
+- provider backend: `ollama`, `openai`, or `openclaw` when provider mode is enabled
+
+The setup wizard now shows numbered menus, so you can choose by number instead of typing every value.
+This avoids typos like `mainet` during first-time setup.
 
 What `network selection mode` means:
 
@@ -104,6 +109,7 @@ Example for a simple live Worldland setup:
 - network profile: `mainnet`
 - network selection mode: `priority-failover`
 - enabled networks: `worldland`
+- provider backend: `openclaw` if you want to connect an OpenClaw agent
 
 ## Commands
 

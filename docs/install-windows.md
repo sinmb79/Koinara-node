@@ -63,9 +63,15 @@ During setup, you will generate or fill:
 - `node.config.json`
 - `.env.local`
 
+The setup wizard now shows numbered menus, so you can choose by number instead of typing every value.
+That makes the first run easier and prevents typos like `mainet`.
+
 You will also be asked for:
 
+- `Role`
 - `Network selection mode (priority-failover/all-healthy)`
+- `Enabled networks`
+- `Provider backend` when you choose `provider` or `both`
 
 What it means:
 
@@ -81,6 +87,7 @@ Recommended choice for most first-time operators:
 
 - if you only want to run on Worldland mainnet, choose `priority-failover`
 - if you explicitly want one node runtime to participate across multiple healthy EVM networks, choose `all-healthy`
+- if you want Koinara to use an OpenClaw agent, choose `openclaw` for the provider backend
 
 If only one network is enabled, both modes behave almost the same in practice.
 

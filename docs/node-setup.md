@@ -56,6 +56,9 @@ During setup you choose:
 - enabled networks by key
 - provider backend when provider mode is enabled
 
+The setup wizard now uses numbered menus for these prompts, so you can press `1`, `2`, `3`, and so on instead of typing raw values.
+That reduces typos during setup and makes OpenClaw selection much easier on a fresh machine.
+
 Selection mode means:
 
 - `priority-failover`
@@ -66,6 +69,7 @@ Selection mode means:
 
 For a simple Worldland-only setup, choose `priority-failover`.
 If you only enable one network, the two modes are almost equivalent in practice.
+If you want to connect an OpenClaw agent, choose `openclaw` when the setup wizard asks for the provider backend.
 
 By default, setup now places runtime state, manifests, receipts, and artifacts under
 `~/.koinara-node` so they do not depend on where the repository was cloned.

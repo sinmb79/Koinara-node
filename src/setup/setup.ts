@@ -7,13 +7,27 @@ import { fileURLToPath } from "node:url";
 import { repoRootFrom } from "../config/loadConfig.js";
 import type {
   FileNodeConfig,
+  InferenceBackendName,
   JobTypeName,
   NetworkProfileName,
   NetworkSelectionMode,
   NodeRole
 } from "../types.js";
 
-type SetupShortcut = "provider-ollama" | "provider-openai" | "verifier-only";
+type SetupShortcut =
+  | "provider-ollama"
+  | "provider-openai"
+  | "provider-openclaw"
+  | "verifier-only";
+
+interface ChoiceOption<T extends string> {
+  value: T;
+  label?: string;
+}
+
+type OpenClawThinkingLevel = NonNullable<
+  NonNullable<NonNullable<FileNodeConfig["provider"]>["openclaw"]>["thinking"]
+>;
 
 export async function main(): Promise<void> {
   const repoRoot = repoRootFrom(import.meta.url);
@@ -33,25 +47,34 @@ export async function main(): Promise<void> {
     }
 
     const defaults = getShortcutDefaults(shortcut);
-    const role = (await ask(rl, "Select role (provider/verifier/both)", defaults.role)) as NodeRole;
-    const networkProfile = (await ask(
-      rl,
-      "Select network profile (testnet/mainnet)",
-      defaults.networkProfile
-    )) as NetworkProfileName;
+    const role = await askChoice(rl, "Select role", [
+      { value: "provider", label: "provider" },
+      { value: "verifier", label: "verifier" },
+      { value: "both", label: "both" }
+    ], defaults.role);
+    const networkProfile = await askChoice(rl, "Select network profile", [
+      { value: "testnet", label: "testnet" },
+      { value: "mainnet", label: "mainnet" }
+    ], defaults.networkProfile);
     console.log(
       "Selection mode help: priority-failover = use one highest-priority healthy chain, " +
         "all-healthy = use every healthy enabled chain."
     );
-    const selectionMode = (await ask(
+    const selectionMode = await askChoice(rl, "Network selection mode", [
+      { value: "priority-failover", label: "priority-failover (one healthy chain, then fail over)" },
+      { value: "all-healthy", label: "all-healthy (all healthy enabled chains together)" }
+    ], "priority-failover");
+    const enabledNetworks = await askMultiChoice(
       rl,
-      "Network selection mode (priority-failover/all-healthy)",
-      "priority-failover"
-    )) as NetworkSelectionMode;
-    const enabledNetworks = await ask(
-      rl,
-      "Enabled networks (comma-separated keys: worldland,base,ethereum,bnb,solana)",
-      defaults.enabledNetworks.join(",")
+      "Enabled networks",
+      [
+        { value: "worldland" },
+        { value: "base" },
+        { value: "ethereum" },
+        { value: "bnb" },
+        { value: "solana" }
+      ],
+      defaults.enabledNetworks
     );
     const sharedRoot = await ask(
       rl,
@@ -72,7 +95,16 @@ export async function main(): Promise<void> {
 
     let providerConfig: FileNodeConfig["provider"] | undefined;
     if (role === "provider" || role === "both") {
-      const backend = await ask(rl, "Provider backend (ollama/openai)", defaults.backend);
+      const backend = await askChoice(
+        rl,
+        "Provider backend",
+        [
+          { value: "ollama", label: "ollama (local model via Ollama)" },
+          { value: "openai", label: "openai (hosted OpenAI API)" },
+          { value: "openclaw", label: "openclaw (connect an OpenClaw agent)" }
+        ],
+        defaults.backend
+      );
       if (backend === "ollama") {
         providerConfig = {
           backend: "ollama",
@@ -82,12 +114,43 @@ export async function main(): Promise<void> {
             model: await ask(rl, "Ollama model", "llama3.1")
           }
         };
-      } else {
+      } else if (backend === "openai") {
         providerConfig = {
           backend: "openai",
           supportedJobTypes: await askJobTypes(rl, defaults.providerJobTypes),
           openai: {
             model: await ask(rl, "OpenAI model", "gpt-4.1-mini")
+          }
+        };
+      } else {
+        providerConfig = {
+          backend: "openclaw",
+          supportedJobTypes: await askJobTypes(rl, defaults.providerJobTypes),
+          openclaw: {
+            command: await ask(rl, "OpenClaw command", "openclaw"),
+            agent: await ask(rl, "OpenClaw agent id", "main"),
+            thinking: await askChoice<OpenClawThinkingLevel>(
+              rl,
+              "OpenClaw thinking level",
+              [
+                { value: "off", label: "off" },
+                { value: "minimal", label: "minimal" },
+                { value: "low", label: "low" },
+                { value: "medium", label: "medium" },
+                { value: "high", label: "high" }
+              ],
+              "low"
+            ),
+            timeoutSeconds: Number(await ask(rl, "OpenClaw timeout in seconds", "120")),
+            local: (await askChoice(
+              rl,
+              "OpenClaw execution mode",
+              [
+                { value: "local", label: "local" },
+                { value: "remote", label: "remote" }
+              ],
+              "local"
+            )) === "local"
           }
         };
       }
@@ -105,7 +168,6 @@ export async function main(): Promise<void> {
       networkProfile,
       selectionMode,
       enabledNetworks: enabledNetworks
-        .split(",")
         .map((entry) => entry.trim())
         .filter(Boolean),
       pollIntervalMs,
@@ -146,7 +208,12 @@ function readShortcutProfile(argv: string[]): SetupShortcut | undefined {
   }
 
   const value = argv[index + 1];
-  if (value === "provider-ollama" || value === "provider-openai" || value === "verifier-only") {
+  if (
+    value === "provider-ollama" ||
+    value === "provider-openai" ||
+    value === "provider-openclaw" ||
+    value === "verifier-only"
+  ) {
     return value;
   }
 
@@ -157,7 +224,7 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
   role: NodeRole;
   networkProfile: NetworkProfileName;
   enabledNetworks: string[];
-  backend: "ollama" | "openai";
+  backend: InferenceBackendName;
   providerJobTypes: JobTypeName[];
   verifierJobTypes: JobTypeName[];
 } {
@@ -168,6 +235,17 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
       enabledNetworks: ["worldland", "base"],
       backend: "openai",
       providerJobTypes: ["General", "Collective"],
+      verifierJobTypes: ["Simple", "General", "Collective"]
+    };
+  }
+
+  if (shortcut === "provider-openclaw") {
+    return {
+      role: "provider",
+      networkProfile: "testnet",
+      enabledNetworks: ["worldland"],
+      backend: "openclaw",
+      providerJobTypes: ["Simple"],
       verifierJobTypes: ["Simple", "General", "Collective"]
     };
   }
@@ -206,16 +284,104 @@ async function askJobTypes(
   rl: ReturnType<typeof createInterface>,
   fallback: JobTypeName[]
 ): Promise<JobTypeName[]> {
-  const answer = await ask(
+  return (await askMultiChoice(
     rl,
-    "Supported job types (comma-separated: Simple,General,Collective)",
-    fallback.join(",")
-  );
+    "Supported job types",
+    [
+      { value: "Simple" },
+      { value: "General" },
+      { value: "Collective" }
+    ],
+    fallback
+  )) as JobTypeName[];
+}
 
-  return answer
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean) as JobTypeName[];
+async function askChoice<T extends string>(
+  rl: ReturnType<typeof createInterface>,
+  question: string,
+  options: ChoiceOption<T>[],
+  fallback: T
+): Promise<T> {
+  const defaultIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === fallback)
+  );
+  while (true) {
+    console.log(`${question}:`);
+    options.forEach((option, index) => {
+      const defaultTag = option.value === fallback ? " (default)" : "";
+      console.log(`  ${index + 1}. ${option.label ?? option.value}${defaultTag}`);
+    });
+    const raw = (await rl.question(`${question} [${defaultIndex + 1}]: `)).trim();
+    if (!raw) {
+      return fallback;
+    }
+
+    const byNumber = Number(raw);
+    if (Number.isInteger(byNumber) && byNumber >= 1 && byNumber <= options.length) {
+      return options[byNumber - 1].value;
+    }
+
+    const byValue = options.find((option) => option.value.toLowerCase() === raw.toLowerCase());
+    if (byValue) {
+      return byValue.value;
+    }
+
+    console.log(`Invalid choice. Enter a number from 1 to ${options.length} or one of: ${options.map((option) => option.value).join(", ")}.`);
+  }
+}
+
+async function askMultiChoice<T extends string>(
+  rl: ReturnType<typeof createInterface>,
+  question: string,
+  options: ChoiceOption<T>[],
+  fallback: T[]
+): Promise<T[]> {
+  while (true) {
+    console.log(`${question}:`);
+    options.forEach((option, index) => {
+      const defaultTag = fallback.includes(option.value) ? " (default)" : "";
+      console.log(`  ${index + 1}. ${option.label ?? option.value}${defaultTag}`);
+    });
+    console.log("  Use comma-separated numbers or values.");
+    const raw = (await rl.question(`${question} [${fallback.join(",")}]: `)).trim();
+    if (!raw) {
+      return fallback;
+    }
+
+    const entries = raw.split(",").map((entry) => entry.trim()).filter(Boolean);
+    const resolved: T[] = [];
+    let valid = true;
+
+    for (const entry of entries) {
+      const byNumber = Number(entry);
+      if (Number.isInteger(byNumber) && byNumber >= 1 && byNumber <= options.length) {
+        const value = options[byNumber - 1].value;
+        if (!resolved.includes(value)) {
+          resolved.push(value);
+        }
+        continue;
+      }
+
+      const byValue = options.find((option) => option.value.toLowerCase() === entry.toLowerCase());
+      if (byValue) {
+        if (!resolved.includes(byValue.value)) {
+          resolved.push(byValue.value);
+        }
+        continue;
+      }
+
+      valid = false;
+      console.log(`Invalid choice: ${entry}`);
+      break;
+    }
+
+    if (valid && resolved.length > 0) {
+      return resolved;
+    }
+
+    console.log(`Invalid selection. Use numbers or values from: ${options.map((option) => option.value).join(", ")}.`);
+  }
 }
 
 function writeJson(path: string, value: unknown): void {
