@@ -1,4 +1,5 @@
 import { checkbox, confirm, input as promptInput, select } from "@inquirer/prompts";
+import { spawn } from "node:child_process";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, resolve } from "node:path";
@@ -45,13 +46,13 @@ export async function main(): Promise<void> {
 
   const defaults = getShortcutDefaults(shortcut);
   const role = await askChoice("Select role", [
-    { value: "provider", label: "provider" },
-    { value: "verifier", label: "verifier" },
-    { value: "both", label: "both" }
+    { value: "provider", label: "provider", description: "Submit inference results and earn provider rewards." },
+    { value: "verifier", label: "verifier", description: "Review submissions, verify jobs, and earn verifier rewards." },
+    { value: "both", label: "both", description: "Run provider and verifier together on one machine." }
   ], defaults.role);
   const networkProfile = await askChoice("Select network profile", [
-    { value: "testnet", label: "testnet" },
-    { value: "mainnet", label: "mainnet" }
+    { value: "testnet", label: "testnet", description: "Safer for rehearsal and dry runs." },
+    { value: "mainnet", label: "mainnet", description: "Live network with real WLC gas and real KOIN rewards." }
   ], defaults.networkProfile);
   const selectionMode = await askChoice("Network selection mode", [
     {
@@ -68,11 +69,11 @@ export async function main(): Promise<void> {
   const enabledNetworks = await askMultiChoice(
     "Enabled networks",
     [
-      { value: "worldland" },
-      { value: "base" },
-      { value: "ethereum" },
-      { value: "bnb" },
-      { value: "solana" }
+      { value: "worldland", description: "Worldland Seoul / Gwangju profiles used by Koinara." },
+      { value: "base", description: "Base EVM network." },
+      { value: "ethereum", description: "Ethereum mainnet or testnet profile." },
+      { value: "bnb", description: "BNB Smart Chain profile." },
+      { value: "solana", description: "Prepared configuration only in this release." }
     ],
     defaults.enabledNetworks
   );
@@ -86,7 +87,7 @@ export async function main(): Promise<void> {
   );
   const pollIntervalMs = Number(await ask("Polling interval in milliseconds", "10000"));
   const privateKeyOrPath = await ask(
-    "Wallet private key or path to key file (leave blank to fill later)",
+    "Wallet private key or path to key file (leave blank now and fill it later before starting the node)",
     ""
   );
 
@@ -130,13 +131,16 @@ export async function main(): Promise<void> {
         }
       };
     } else {
-      providerConfig = {
-        backend: "openclaw",
-        supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
-        openclaw: {
-          command: await ask("OpenClaw command", "openclaw"),
-          agent: await ask("OpenClaw agent id", "main"),
-          thinking: await askChoice<OpenClawThinkingLevel>(
+      const customizeOpenClaw = await askConfirm(
+        "Do you want to customize OpenClaw CLI settings now?",
+        false
+      );
+      const openclawCommand = customizeOpenClaw
+        ? await ask("OpenClaw command or full path", "openclaw")
+        : undefined;
+      const openclawAgent = customizeOpenClaw ? await ask("OpenClaw agent id", "main") : "main";
+      const openclawThinking = customizeOpenClaw
+        ? await askChoice<OpenClawThinkingLevel>(
             "OpenClaw thinking level",
             [
               { value: "off", label: "off" },
@@ -146,9 +150,48 @@ export async function main(): Promise<void> {
               { value: "high", label: "high" }
             ],
             "low"
-          ),
-          timeoutSeconds: Number(await ask("OpenClaw timeout in seconds", "120")),
-          local: await askConfirm("Run OpenClaw locally on this machine?", true)
+          )
+        : "low";
+      const openclawTimeoutSeconds = customizeOpenClaw
+        ? Number(await ask("OpenClaw timeout in seconds", "120"))
+        : 120;
+      const openclawLocal = customizeOpenClaw ? await askConfirm("Run OpenClaw locally on this machine?", true) : true;
+
+      const verifyOpenClaw = await askConfirm(
+        "Run a quick OpenClaw connection check now?",
+        true
+      );
+      if (verifyOpenClaw) {
+        const check = await testOpenClawConnection({
+          command: openclawCommand,
+          agent: openclawAgent,
+          thinking: openclawThinking,
+          timeoutSeconds: openclawTimeoutSeconds,
+          local: openclawLocal
+        });
+        if (check.ok) {
+          console.log(`OpenClaw check passed: ${check.summary}`);
+        } else {
+          console.warn(`OpenClaw check failed: ${check.summary}`);
+          const continueAnyway = await askConfirm(
+            "Continue setup anyway and save the OpenClaw config?",
+            true
+          );
+          if (!continueAnyway) {
+            throw new Error("Setup cancelled until OpenClaw connection is fixed.");
+          }
+        }
+      }
+
+      providerConfig = {
+        backend: "openclaw",
+        supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
+        openclaw: {
+          command: openclawCommand,
+          agent: openclawAgent,
+          thinking: openclawThinking,
+          timeoutSeconds: openclawTimeoutSeconds,
+          local: openclawLocal
         }
       };
     }
@@ -277,9 +320,9 @@ async function askJobTypes(fallback: JobTypeName[]): Promise<JobTypeName[]> {
   return (await askMultiChoice(
     "Supported job types",
     [
-      { value: "Simple" },
-      { value: "General" },
-      { value: "Collective" }
+      { value: "Simple", description: "Fast, small jobs. Lowest coordination cost and quickest path to a result." },
+      { value: "General", description: "Normal multi-step jobs. Broader participation and more verification than Simple." },
+      { value: "Collective", description: "Harder jobs that benefit from wider participation and stronger consensus." }
     ],
     fallback
   )) as JobTypeName[];
@@ -327,6 +370,72 @@ async function askConfirm(question: string, fallback: boolean): Promise<boolean>
   return await confirm({
     message: question,
     default: fallback
+  });
+}
+
+async function testOpenClawConnection(options: {
+  command?: string;
+  agent: string;
+  thinking: OpenClawThinkingLevel;
+  timeoutSeconds: number;
+  local: boolean;
+}): Promise<{ ok: true; summary: string } | { ok: false; summary: string }> {
+  const command = options.command?.trim() || "openclaw";
+  const args = ["agent", "--agent", options.agent.trim() || "main", "--json"];
+
+  if (options.local) {
+    args.push("--local");
+  }
+
+  if (options.thinking?.trim()) {
+    args.push("--thinking", options.thinking.trim());
+  }
+
+  if (options.timeoutSeconds && Number.isFinite(options.timeoutSeconds)) {
+    args.push("--timeout", String(options.timeoutSeconds));
+  }
+
+  args.push("--message", "Reply with exactly OK");
+
+  return await new Promise((resolvePromise) => {
+    const child = spawn(command, args, {
+      stdio: ["ignore", "pipe", "pipe"],
+      env: process.env
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", (error) => {
+      resolvePromise({
+        ok: false,
+        summary: error.message
+      });
+    });
+
+    child.on("close", (code) => {
+      if (code !== 0) {
+        resolvePromise({
+          ok: false,
+          summary: stderr.trim() || stdout.trim() || `OpenClaw exited with code ${code}`
+        });
+        return;
+      }
+
+      const body = stdout.trim() || stderr.trim();
+      resolvePromise({
+        ok: true,
+        summary: body ? "agent returned a JSON response" : "agent completed successfully"
+      });
+    });
   });
 }
 

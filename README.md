@@ -85,6 +85,8 @@ During `npm run setup`, you will be asked for:
 - network selection mode: `priority-failover` or `all-healthy`
 - enabled networks
 - provider backend: `ollama`, `openai`, or `openclaw` when provider mode is enabled
+- supported job types: `Simple`, `General`, `Collective`
+- whether to connect the provider to an OpenClaw agent
 
 The setup wizard now uses interactive menus.
 
@@ -115,6 +117,23 @@ Example for a simple live Worldland setup:
 - network selection mode: `priority-failover`
 - enabled networks: `worldland`
 - provider backend: `openclaw` if you want to connect an OpenClaw agent
+
+If you answer `Yes` to the OpenClaw question during setup:
+
+- the node stores an OpenClaw-backed provider config
+- it uses the normal default CLI command `openclaw`
+- it can run a quick OpenClaw connection check before saving the config
+
+What `supported job types` means:
+
+- `Simple`
+  - fast, smaller jobs
+  - easiest starting point for a new operator
+- `General`
+  - normal multi-step jobs
+  - broader participation than `Simple`
+- `Collective`
+  - harder jobs that benefit from wider participation and stronger consensus
 
 ## Commands
 

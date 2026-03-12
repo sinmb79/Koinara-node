@@ -77,6 +77,7 @@ You will also be asked for:
 - `Network selection mode (priority-failover/all-healthy)`
 - `Enabled networks`
 - `Provider backend` when you choose `provider` or `both`
+- `Do you want to connect this provider to an OpenClaw agent?`
 
 What it means:
 
@@ -92,7 +93,14 @@ Recommended choice for most first-time operators:
 
 - if you only want to run on Worldland mainnet, choose `priority-failover`
 - if you explicitly want one node runtime to participate across multiple healthy EVM networks, choose `all-healthy`
-- if you want Koinara to use an OpenClaw agent, choose `openclaw` for the provider backend
+- if you want Koinara to use an OpenClaw agent, answer `Yes` when setup asks whether to connect to OpenClaw
+
+If you choose OpenClaw during setup:
+
+- Koinara uses the normal default CLI command `openclaw`
+- the default agent id is `main`
+- the default mode is local execution on the current machine
+- setup can run a quick OpenClaw connection check before it saves the config
 
 If only one network is enabled, both modes behave almost the same in practice.
 

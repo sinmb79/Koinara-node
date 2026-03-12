@@ -44,6 +44,16 @@ This installs the skill into:
 
 ## Step 3. Run the OpenClaw-backed provider path
 
+If you choose `Yes` during `npm.cmd run setup` when asked whether this provider should connect to an OpenClaw agent, setup will:
+
+- enable the OpenClaw provider backend
+- use the default CLI command `openclaw`
+- use the default agent id `main`
+- default to local execution on the current machine
+- offer to run a quick OpenClaw connection check before saving
+
+You only need to customize the CLI path if `openclaw` is not already available on your shell path.
+
 Use the dedicated Worldland v2 commands:
 
 ```powershell
