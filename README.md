@@ -166,15 +166,16 @@ What a good first-time result looks like after `npm.cmd run setup`:
 - `Setup saved the config files, but the node is not running yet.`
 - a short list of next commands including `check`, `start`, and `claim`
 
-What `Provider connection check: not ready (spawn openclaw ENOENT)` means:
+What `Provider connection check: not ready` means:
 
 - the bundled Koinara OpenClaw skill may already be installed
-- but the `openclaw` command is still not available on this computer
+- but the OpenClaw CLI is still not available from this PowerShell session
 - the config was saved, but OpenClaw itself is not ready yet
 
 If that happens, run these in order:
 
 ```powershell
+cd $env:USERPROFILE\koinara-node
 openclaw.cmd --help
 openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check

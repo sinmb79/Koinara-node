@@ -114,7 +114,7 @@ Recommended choice for most first-time operators:
 
 If you choose `OpenClaw agent` during setup:
 
-- Koinara uses the normal default CLI command `openclaw`
+- Koinara uses the normal default CLI command `openclaw.cmd` in Windows PowerShell
 - the default agent id is `main`
 - the default mode is local execution on the current machine
 - setup runs a quick OpenClaw connection check before it saves the config
@@ -255,6 +255,7 @@ Use these docs next:
 If you want to install the bundled OpenClaw skill package globally:
 
 ```powershell
+cd $env:USERPROFILE\koinara-node
 powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
 ```
 
@@ -300,6 +301,7 @@ It means:
 Run these next:
 
 ```powershell
+cd $env:USERPROFILE\koinara-node
 openclaw.cmd --help
 openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
@@ -308,6 +310,13 @@ npm.cmd run provider:v2:openclaw:check
 If `openclaw.cmd --help` fails, fix OpenClaw installation or shell path first.
 If `openclaw.cmd --help` works but `openclaw.cmd agent ...` fails, fix the local OpenClaw agent first.
 If both succeed, `provider:v2:openclaw:check` should become the human-readable Koinara connection snapshot.
+
+If you are sitting in `C:\Windows\System32`, change directory first.
+The repo scripts and config files are expected under:
+
+```text
+C:\Users\<current-user>\koinara-node
+```
 
 ### Repo cloned to the wrong location
 

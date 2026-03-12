@@ -39,6 +39,7 @@ From the repo root:
 ### Windows PowerShell
 
 ```powershell
+cd $env:USERPROFILE\koinara-node
 powershell -ExecutionPolicy Bypass -File .\scripts\install-openclaw-skill.ps1
 ```
 
@@ -106,6 +107,7 @@ What each command is for:
 Recommended first-time order after setup:
 
 ```powershell
+cd $env:USERPROFILE\koinara-node
 openclaw.cmd --help
 openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
@@ -118,6 +120,13 @@ What success looks like:
 - `openclaw.cmd agent ...` returns JSON
 - `provider:v2:openclaw:check` shows current epoch, next epoch close, recent jobs, and reward state
 - `provider:v2:openclaw:start` stays running and prints live job activity when work arrives
+
+If you are in `C:\Windows\System32`, do not run the script from there.
+Move to the repo first:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+```
 
 If you also run a verifier:
 
