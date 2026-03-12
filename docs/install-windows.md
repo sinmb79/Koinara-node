@@ -63,7 +63,12 @@ During setup, you will generate or fill:
 - `node.config.json`
 - `.env.local`
 
-The setup wizard now shows numbered menus, so you can choose by number instead of typing every value.
+The setup wizard now uses interactive menus.
+
+- move with `Up` / `Down`
+- press `Enter` to choose one option
+- on multi-select screens, press `Space` to toggle and `Enter` to confirm
+
 That makes the first run easier and prevents typos like `mainet`.
 
 You will also be asked for:

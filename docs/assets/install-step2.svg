@@ -9,8 +9,8 @@
   <circle cx="186" cy="121" r="11" fill="#33e2d6"/>
   <text x="230" y="128" fill="#91a2c1" font-family="IBM Plex Mono, monospace" font-size="30">Setup wizard</text>
   <text x="130" y="240" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="28">$ npm.cmd run setup</text>
-  <text x="130" y="318" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Select role (provider/verifier/both) [provider]:</text>
-  <text x="130" y="364" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Network profile (testnet/mainnet) [mainnet]:</text>
+  <text x="130" y="318" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Use arrow keys to move, Enter to choose, Space to toggle multi-select.</text>
+  <text x="130" y="364" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Provider setup can now choose ollama, openai, or openclaw.</text>
   <text x="130" y="410" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Shared manifest and receipt root</text>
   <text x="130" y="448" fill="#33e2d6" font-family="IBM Plex Mono, monospace" font-size="24">[C:\Users\&lt;current-user&gt;\.koinara-node\network]</text>
   <text x="130" y="504" fill="#dfe7f5" font-family="IBM Plex Mono, monospace" font-size="24">Artifact output directory</text>

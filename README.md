@@ -86,7 +86,12 @@ During `npm run setup`, you will be asked for:
 - enabled networks
 - provider backend: `ollama`, `openai`, or `openclaw` when provider mode is enabled
 
-The setup wizard now shows numbered menus, so you can choose by number instead of typing every value.
+The setup wizard now uses interactive menus.
+
+- move with `Up` / `Down`
+- press `Enter` to choose
+- on multi-select screens, press `Space` to toggle and `Enter` to confirm
+
 This avoids typos like `mainet` during first-time setup.
 
 What `network selection mode` means:

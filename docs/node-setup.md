@@ -56,7 +56,12 @@ During setup you choose:
 - enabled networks by key
 - provider backend when provider mode is enabled
 
-The setup wizard now uses numbered menus for these prompts, so you can press `1`, `2`, `3`, and so on instead of typing raw values.
+The setup wizard now uses interactive menus for these prompts.
+
+- move with `Up` / `Down`
+- press `Enter` to choose one option
+- on multi-select screens, press `Space` to toggle and `Enter` to confirm
+
 That reduces typos during setup and makes OpenClaw selection much easier on a fresh machine.
 
 Selection mode means:
