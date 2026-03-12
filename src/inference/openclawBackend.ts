@@ -82,7 +82,8 @@ export class OpenClawBackend implements InferenceBackend {
     return new Promise((resolvePromise, reject) => {
       const child = spawn(command, args, {
         stdio: ["ignore", "pipe", "pipe"],
-        env: process.env
+        env: process.env,
+        shell: process.platform === "win32"
       });
 
       let stdout = "";

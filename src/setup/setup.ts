@@ -445,7 +445,8 @@ async function testOpenClawConnection(options: {
   return await new Promise((resolvePromise) => {
     const child = spawn(command, args, {
       stdio: ["ignore", "pipe", "pipe"],
-      env: process.env
+      env: process.env,
+      shell: process.platform === "win32"
     });
 
     let stdout = "";
