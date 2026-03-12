@@ -71,6 +71,14 @@ The setup wizard now uses interactive menus.
 
 That makes the first run easier and prevents typos like `mainet`.
 
+For most first-time operators:
+
+- choose `OpenClaw agent` if you want Koinara to use OpenClaw on this same computer
+- choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
+- when setup asks whether to customize OpenClaw or Ollama settings, most users should choose `No`
+- if OpenClaw is installed normally, the default command `openclaw` is usually correct
+- if Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct
+
 You will also be asked for:
 
 - `Role`

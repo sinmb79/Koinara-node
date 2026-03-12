@@ -95,6 +95,12 @@ The setup wizard now uses interactive menus.
 
 This avoids typos like `mainet` during first-time setup.
 
+For most first-time operators:
+
+- choose `OpenClaw agent` if you want Koinara to use OpenClaw on this same computer
+- choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
+- when setup asks whether to customize OpenClaw or Ollama settings, most users should choose `No`
+
 What `network selection mode` means:
 
 - `priority-failover`

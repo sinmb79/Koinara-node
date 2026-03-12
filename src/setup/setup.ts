@@ -44,6 +44,13 @@ export async function main(): Promise<void> {
     );
   }
 
+  console.log("Setup notes:");
+  console.log("- Provider mode requires one inference source: OpenClaw agent or local LLM (Ollama).");
+  console.log("- If OpenClaw is installed normally, the default command `openclaw` is usually correct.");
+  console.log("- If Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct.");
+  console.log("- You can leave the wallet field blank now and fill it later before starting the node.");
+  console.log("");
+
   const defaults = getShortcutDefaults(shortcut);
   const role = await askChoice("Select role", [
     { value: "provider", label: "provider", description: "Submit inference results and earn provider rewards." },
@@ -112,14 +119,17 @@ export async function main(): Promise<void> {
 
     if (backend === "ollama") {
       const customizeOllama = await askConfirm(
-        "Do you want to customize Ollama settings now?",
+        "Customize Ollama settings now? Most users can choose No and use the default local settings.",
         false
       );
       const ollamaBaseUrl = customizeOllama
-        ? await ask("Ollama base URL", "http://127.0.0.1:11434")
+        ? await ask(
+            "Ollama base URL (leave the default if Ollama runs on this same computer)",
+            "http://127.0.0.1:11434"
+          )
         : "http://127.0.0.1:11434";
       const ollamaModel = customizeOllama
-        ? await ask("Ollama model", "llama3.1")
+        ? await ask("Ollama model name", "llama3.1")
         : "llama3.1";
       const verifyOllama = await askConfirm(
         "Run a quick Ollama connection check now?",
@@ -154,11 +164,14 @@ export async function main(): Promise<void> {
       };
     } else {
       const customizeOpenClaw = await askConfirm(
-        "Do you want to customize OpenClaw CLI settings now?",
+        "Customize OpenClaw settings now? Most users can choose No and use the default local settings.",
         false
       );
       const openclawCommand = customizeOpenClaw
-        ? await ask("OpenClaw command or full path", "openclaw")
+        ? await ask(
+            "OpenClaw command or full path (leave the default if `openclaw` already works in this terminal)",
+            "openclaw"
+          )
         : undefined;
       const openclawAgent = customizeOpenClaw ? await ask("OpenClaw agent id", "main") : "main";
       const openclawThinking = customizeOpenClaw
