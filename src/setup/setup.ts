@@ -58,7 +58,8 @@ export async function main(): Promise<void> {
   console.log("- Provider mode requires one inference source: OpenClaw agent or local LLM (Ollama).");
   console.log("- If OpenClaw is installed normally, the default command `openclaw` is usually correct.");
   console.log("- If Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct.");
-  console.log("- You can leave the wallet field blank now and fill it later before starting the node.");
+  console.log("- First-time setup keeps runtime folders and polling on safe defaults unless you choose to customize them.");
+  console.log("- You can skip wallet setup now and fill it later before starting the node.");
   console.log("");
 
   const defaults = getShortcutDefaults(shortcut);
@@ -93,19 +94,6 @@ export async function main(): Promise<void> {
       { value: "solana", description: "Prepared configuration only in this release." }
     ],
     defaults.enabledNetworks
-  );
-  const sharedRoot = await ask(
-    "Shared manifest and receipt root",
-    resolve(runtimeRoot, "network")
-  );
-  const artifactOutputDir = await ask(
-    "Artifact output directory",
-    resolve(runtimeRoot, "artifacts")
-  );
-  const pollIntervalMs = Number(await ask("Polling interval in milliseconds", "10000"));
-  const privateKeyOrPath = await ask(
-    "Wallet private key or path to key file (leave blank now and fill it later before starting the node)",
-    ""
   );
 
   let providerConfig: FileNodeConfig["provider"] | undefined;
@@ -221,6 +209,30 @@ export async function main(): Promise<void> {
     };
   }
 
+  const defaultSharedRoot = resolve(runtimeRoot, "network");
+  const defaultArtifactOutputDir = resolve(runtimeRoot, "artifacts");
+  const defaultPollIntervalMs = 10000;
+  const customizeAdvancedSettings = await askConfirm(
+    "Customize runtime folders or polling interval now?",
+    false
+  );
+  const sharedRoot = customizeAdvancedSettings
+    ? await ask("Shared manifest and receipt root", defaultSharedRoot)
+    : defaultSharedRoot;
+  const artifactOutputDir = customizeAdvancedSettings
+    ? await ask("Artifact output directory", defaultArtifactOutputDir)
+    : defaultArtifactOutputDir;
+  const pollIntervalMs = customizeAdvancedSettings
+    ? Number(await ask("Polling interval in milliseconds", String(defaultPollIntervalMs)))
+    : defaultPollIntervalMs;
+  const configureWalletNow = await askConfirm(
+    "Configure the wallet for on-chain actions now?",
+    false
+  );
+  const privateKeyOrPath = configureWalletNow
+    ? await ask("Wallet private key or path to key file", "")
+    : "";
+
   const fileConfig: FileNodeConfig = {
     networkProfile,
     selectionMode,
@@ -261,7 +273,8 @@ export async function main(): Promise<void> {
     providerCheck,
     openClawSkillInstall,
     walletConfigured: Boolean(privateKeyOrPath),
-    providerBackend: providerConfig?.backend
+    providerBackend: providerConfig?.backend,
+    usedDefaultAdvancedSettings: !customizeAdvancedSettings
   });
 }
 
@@ -568,6 +581,7 @@ function printSetupSummary(input: {
   providerCheck?: ConnectionCheckResult;
   openClawSkillInstall?: SkillInstallResult;
   walletConfigured: boolean;
+  usedDefaultAdvancedSettings: boolean;
   providerBackend?: FileNodeConfig["provider"] extends infer T
     ? T extends { backend: infer B }
       ? B
@@ -596,6 +610,26 @@ function printSetupSummary(input: {
   console.log(
     `- Wallet for on-chain actions: ${input.walletConfigured ? "configured" : "not configured yet"}`
   );
+  console.log(
+    `- Runtime folders and polling: ${input.usedDefaultAdvancedSettings ? "using standard defaults" : "customized"}`
+  );
+  console.log("");
+  console.log("Current state:");
+  if (input.providerCheck?.ok) {
+    console.log("- Provider backend check passed on this computer.");
+  } else if (input.providerBackend === "openclaw" && input.providerCheck) {
+    if (input.providerCheck.summary.includes("ENOENT")) {
+      console.log("- OpenClaw skill was installed, but the `openclaw` command was not found on this computer yet.");
+      console.log("- This means setup saved the config, but OpenClaw CLI is not ready in your shell path.");
+    } else {
+      console.log(`- OpenClaw is configured, but the connection check still failed: ${input.providerCheck.summary}`);
+    }
+  } else if (input.providerCheck) {
+    console.log(`- Provider backend is configured, but the connection check still failed: ${input.providerCheck.summary}`);
+  }
+  if (!input.walletConfigured) {
+    console.log("- Wallet is still empty, so the node cannot send on-chain transactions until you add it.");
+  }
   console.log("");
   console.log("What this means:");
   console.log("- Setup saved the config files, but the node is not running yet.");
@@ -616,12 +650,13 @@ function printSetupSummary(input: {
   console.log("- Check the saved config with: npm run doctor");
   if (input.role === "provider" || input.role === "both") {
     if (input.providerBackend === "openclaw") {
-      console.log("- Provider connection status: npm run provider:v2:openclaw:status");
+      console.log("- Confirm OpenClaw CLI exists: openclaw --help");
+      console.log(
+        '- Confirm the local OpenClaw agent replies: openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"'
+      );
+      console.log("- Provider check (connection + epoch + recent jobs + rewards): npm run provider:v2:openclaw:check");
       console.log("- Provider start: npm run provider:v2:openclaw:start");
       console.log("- Provider claim after epoch close: npm run provider:v2:openclaw:claim");
-      console.log(
-        '- Manual OpenClaw check: openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"'
-      );
       console.log("- OpenClaw skill install (manual fallback): powershell -ExecutionPolicy Bypass -File .\\scripts\\install-openclaw-skill.ps1");
       console.log("- When jobs are processed, the running terminal will print lines like:");
       console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
@@ -634,7 +669,7 @@ function printSetupSummary(input: {
     }
   }
   if (input.role === "verifier" || input.role === "both") {
-    console.log("- Verifier connection status: npm run verifier:v2:status");
+    console.log("- Verifier check (connection + epoch + recent jobs + rewards): npm run verifier:v2:status");
     console.log("- Verifier start: npm run verifier:v2:start");
     console.log("- Verifier claim after epoch close: npm run verifier:v2:claim");
     console.log("- When jobs are processed, the running terminal will print lines like:");

@@ -87,6 +87,8 @@ During `npm run setup`, you will be asked for:
 - provider inference source: `openclaw` or local LLM via `ollama` when provider mode is enabled
 - supported job types: `Simple`, `General`, `Collective`
 
+The first-time wizard keeps runtime folders and polling on standard defaults unless you explicitly choose to customize advanced settings. It also lets you skip wallet entry and fill it later before starting the node.
+
 The setup wizard now uses interactive menus.
 
 - move with `Up` / `Down`
@@ -124,6 +126,22 @@ Example for a simple live Worldland setup:
 - enabled networks: `worldland`
 - provider inference source: choose either `OpenClaw agent` or `local LLM (Ollama)`
 
+After setup, the most useful first command is:
+
+```powershell
+npm.cmd run provider:v2:openclaw:check
+```
+
+It shows:
+
+- whether the node can read its config
+- whether the provider path is connected
+- current epoch
+- next epoch close time
+- recent provider jobs
+- recent verifier actions
+- claimable reward estimates
+
 If you choose `OpenClaw agent` during setup:
 
 - the node stores an OpenClaw-backed provider config
@@ -131,12 +149,43 @@ If you choose `OpenClaw agent` during setup:
 - it uses the default agent id `main`
 - it runs a quick OpenClaw connection check before saving the config
 - it tries to install the bundled OpenClaw skill automatically
+- it keeps the normal runtime folders and polling defaults unless you choose to customize them
 
 Manual OpenClaw check command:
 
 ```powershell
 openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 ```
+
+What a good first-time result looks like after `npm.cmd run setup`:
+
+- `Provider connection check: ready`
+- `Wallet for on-chain actions: configured` or `not configured yet`
+- `Setup saved the config files, but the node is not running yet.`
+- a short list of next commands including `check`, `start`, and `claim`
+
+What `Provider connection check: not ready (spawn openclaw ENOENT)` means:
+
+- the bundled Koinara OpenClaw skill may already be installed
+- but the `openclaw` command is still not available on this computer
+- the config was saved, but OpenClaw itself is not ready yet
+
+If that happens, run these in order:
+
+```powershell
+openclaw --help
+openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+npm.cmd run provider:v2:openclaw:check
+```
+
+What those three commands tell you:
+
+- `openclaw --help`
+  - whether this computer can launch the OpenClaw CLI at all
+- `openclaw agent ...`
+  - whether the local OpenClaw agent actually answers
+- `npm.cmd run provider:v2:openclaw:check`
+  - whether Koinara-node is configured, which epoch is active, when the next epoch closes, what recent jobs were seen, and what rewards are currently claimable
 
 If you choose `local LLM (Ollama)` during setup:
 

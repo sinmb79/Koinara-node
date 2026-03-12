@@ -56,6 +56,8 @@ During setup you choose:
 - enabled networks by key
 - provider inference source when provider mode is enabled
 
+The first-time wizard keeps runtime folders and polling on standard defaults unless you explicitly choose to customize advanced settings. It also lets you skip wallet entry and fill it later before starting the node.
+
 The setup wizard now uses interactive menus for these prompts.
 
 - move with `Up` / `Down`
@@ -121,10 +123,19 @@ npm run verifier:v2:claim
 For the built-in OpenClaw provider path, use:
 
 ```bash
+npm run provider:v2:openclaw:check
 npm run provider:v2:openclaw:doctor
 npm run provider:v2:openclaw:start
 npm run provider:v2:openclaw:claim
 ```
+
+Use `provider:v2:openclaw:check` as the first human-readable status snapshot. It shows:
+
+- whether the OpenClaw-backed provider path is ready
+- current epoch
+- next epoch close
+- recent jobs
+- reward state
 
 If you want both roles to start automatically when you log into Windows:
 
@@ -171,5 +182,6 @@ The current supported paths are:
 - OpenClaw for agent workflow and prompt orchestration
 - OpenClaw as a built-in provider backend through `provider.backend = "openclaw"`
 - `Koinara-node` for actual provider / verifier participation and on-chain transactions
+- the bundled Koinara OpenClaw skill under `skills/koinara-node/`
 
-What still does not exist in this repository is a first-class OpenClaw skill package that manages the node for you.
+If setup ends with `spawn openclaw ENOENT`, it means the skill may be installed but the OpenClaw CLI is still not available in this computer's shell path.

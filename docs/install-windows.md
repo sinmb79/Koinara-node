@@ -58,6 +58,15 @@ The current defaults place runtime files under your home folder:
 
 This means the runtime does not depend on where the repo was cloned.
 
+For a normal first-time install, you do not need to customize:
+
+- manifest root
+- artifact root
+- polling interval
+- wallet path
+
+The wizard now keeps those on safe defaults unless you explicitly choose to customize them.
+
 During setup, you will generate or fill:
 
 - `node.config.json`
@@ -111,6 +120,18 @@ If you choose `OpenClaw agent` during setup:
 - setup runs a quick OpenClaw connection check before it saves the config
 - setup also tries to install the bundled OpenClaw skill before finishing
 
+What that OpenClaw check result means:
+
+- `ready`
+  - the `openclaw` command was found on this computer
+  - the local OpenClaw agent answered
+  - Koinara can save a working OpenClaw-backed provider config
+- `not ready (spawn openclaw ENOENT)`
+  - Koinara saved the config
+  - the bundled OpenClaw skill may already be installed
+  - but this computer still cannot launch the `openclaw` command
+  - in other words, the skill exists but the OpenClaw CLI is not ready on this PC yet
+
 Manual OpenClaw check command:
 
 ```powershell
@@ -134,17 +155,39 @@ and use different `NODE_STATE_DIR` values.
 
 ## Step 3. Run doctor, then start the role
 
-For a provider:
+If you chose `OpenClaw agent`, run these in order:
+
+```powershell
+openclaw --help
+openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
+
+What each command is for:
+
+- `openclaw --help`
+  - confirms that this computer can launch the OpenClaw CLI
+- `openclaw agent ...`
+  - confirms that the local OpenClaw agent actually answers
+- `npm.cmd run provider:v2:openclaw:check`
+  - confirms Koinara-node config, epoch, next epoch close, recent jobs, and claimable rewards
+- `npm.cmd run provider:v2:openclaw:start`
+  - starts the live provider runtime
+
+If you chose `local LLM (Ollama)`, use:
 
 ```powershell
 npm.cmd run provider:v2:doctor
+npm.cmd run provider:v2:status
 npm.cmd run provider:v2:start
 ```
 
-For a verifier:
+For a plain verifier:
 
 ```powershell
 npm.cmd run verifier:v2:doctor
+npm.cmd run verifier:v2:status
 npm.cmd run verifier:v2:start
 ```
 
@@ -155,6 +198,16 @@ If you run both roles on the same machine:
 - use separate PowerShell windows
 - use separate env files
 - use separate state directories
+
+What success looks like after start:
+
+- provider window shows repeating runtime passes
+- when a job is accepted, provider logs lines such as:
+  - `worldland: provider submitted response for job <jobId> (<responseHash>)`
+- verifier logs lines such as:
+  - `worldland: verifier approved job <jobId>`
+  - `worldland: verifier finalized PoI for job <jobId>`
+- status or check commands show the current epoch and next epoch close time
 
 ## Step 4. Claim after the current epoch closes
 
@@ -175,6 +228,20 @@ Then verify:
 npm.cmd run provider:v2:status
 npm.cmd run verifier:v2:status
 ```
+
+Why claim is delayed:
+
+- Koinara v2 does not mint rewards immediately when you install or when a job finishes
+- active rewards and work rewards are calculated inside the current epoch
+- actual minting happens only after that epoch closes and you run a claim command
+
+So the normal flow is:
+
+1. install and save config
+2. connect and run the node
+3. process jobs or stay active on-chain
+4. wait for the epoch to close
+5. run `claim`
 
 ## If you want OpenClaw
 
@@ -219,6 +286,28 @@ Use:
 ```powershell
 cd $env:USERPROFILE\koinara-node
 ```
+
+### Setup ended, but OpenClaw still says `not ready`
+
+This is the most common first-time confusion.
+
+It means:
+
+- setup saved `node.config.json` and `.env.local`
+- the bundled OpenClaw skill may have been copied into `~/.openclaw/skills/koinara-node`
+- but this computer still cannot launch the `openclaw` command
+
+Run these next:
+
+```powershell
+openclaw --help
+openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+npm.cmd run provider:v2:openclaw:check
+```
+
+If `openclaw --help` fails, fix OpenClaw installation or shell path first.
+If `openclaw --help` works but `openclaw agent ...` fails, fix the local OpenClaw agent first.
+If both succeed, `provider:v2:openclaw:check` should become the human-readable Koinara connection snapshot.
 
 ### Repo cloned to the wrong location
 

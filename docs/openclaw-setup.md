@@ -9,6 +9,14 @@ Use this guide when you want:
 
 ## Step 1. Verify the local OpenClaw agent
 
+First, make sure this computer can launch the OpenClaw CLI at all:
+
+```powershell
+openclaw --help
+```
+
+If that fails, do not continue yet. Koinara can save an OpenClaw-backed config, but the provider cannot become ready until the `openclaw` command exists on this computer.
+
 Run this first:
 
 ```powershell
@@ -18,6 +26,11 @@ openclaw agent --agent main --local --json --message "Reply with exactly OK"
 ![OpenClaw local check](./assets/openclaw-step1.svg)
 
 Do not continue until this returns a valid JSON payload.
+
+That result proves two different things:
+
+- the `openclaw` command exists on this computer
+- the local `main` agent actually answers
 
 ## Step 2. Install the bundled Koinara OpenClaw skill
 
@@ -53,6 +66,21 @@ If you choose `OpenClaw agent` during `npm.cmd run setup`, setup will:
 - run a quick OpenClaw connection check before saving
 - try to install the bundled Koinara OpenClaw skill automatically
 
+Important:
+
+- `OpenClaw skill installed`
+  - means the Koinara helper skill was copied into `~/.openclaw/skills/koinara-node`
+- `OpenClaw connection ready`
+  - means the `openclaw` command exists and the local agent answered
+
+Those are not the same state.
+
+If setup ends with `spawn openclaw ENOENT`, it means:
+
+- the skill may already be installed
+- but OpenClaw CLI is still missing from this computer's shell path
+- so the provider is configured but not ready yet
+
 You only need to customize the CLI path if `openclaw` is not already available on your shell path.
 
 Use the dedicated Worldland v2 commands:
@@ -74,6 +102,22 @@ What each command is for:
   - live runtime that receives jobs and submits responses
 - `provider:v2:openclaw:claim`
   - claim rewards after the current epoch closes
+
+Recommended first-time order after setup:
+
+```powershell
+openclaw --help
+openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+npm.cmd run provider:v2:openclaw:check
+npm.cmd run provider:v2:openclaw:start
+```
+
+What success looks like:
+
+- `openclaw --help` prints CLI help
+- `openclaw agent ...` returns JSON
+- `provider:v2:openclaw:check` shows current epoch, next epoch close, recent jobs, and reward state
+- `provider:v2:openclaw:start` stays running and prints live job activity when work arrives
 
 If you also run a verifier:
 
