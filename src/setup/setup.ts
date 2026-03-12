@@ -30,6 +30,11 @@ interface ConnectionCheckResult {
   summary: string;
 }
 
+interface SkillInstallResult {
+  ok: boolean;
+  summary: string;
+}
+
 type OpenClawThinkingLevel = NonNullable<
   NonNullable<NonNullable<FileNodeConfig["provider"]>["openclaw"]>["thinking"]
 >;
@@ -106,6 +111,7 @@ export async function main(): Promise<void> {
   let providerConfig: FileNodeConfig["provider"] | undefined;
   let providerCheck: ConnectionCheckResult | undefined;
   let providerSourceSummary: string | undefined;
+  let openClawSkillInstall: SkillInstallResult | undefined;
   if (role === "provider" || role === "both") {
     const backend = await askChoice<"ollama" | "openclaw">(
       "Provider inference source",
@@ -186,6 +192,13 @@ export async function main(): Promise<void> {
         }
       }
 
+      openClawSkillInstall = await installOpenClawSkill(repoRoot);
+      if (openClawSkillInstall.ok) {
+        console.log(`OpenClaw skill install passed: ${openClawSkillInstall.summary}`);
+      } else {
+        console.warn(`OpenClaw skill install failed: ${openClawSkillInstall.summary}`);
+      }
+
       providerConfig = {
         backend: "openclaw",
         supportedJobTypes: await askJobTypes(defaults.providerJobTypes),
@@ -246,6 +259,7 @@ export async function main(): Promise<void> {
     enabledNetworks,
     providerSourceSummary,
     providerCheck,
+    openClawSkillInstall,
     walletConfigured: Boolean(privateKeyOrPath),
     providerBackend: providerConfig?.backend
   });
@@ -485,6 +499,66 @@ async function testOllamaConnection(options: {
   }
 }
 
+async function installOpenClawSkill(repoRoot: string): Promise<SkillInstallResult> {
+  const isWindows = process.platform === "win32";
+  const scriptPath = isWindows
+    ? resolve(repoRoot, "scripts", "install-openclaw-skill.ps1")
+    : resolve(repoRoot, "scripts", "install-openclaw-skill.sh");
+
+  if (!existsSync(scriptPath)) {
+    return {
+      ok: false,
+      summary: `missing installer script: ${scriptPath}`
+    };
+  }
+
+  const command = isWindows ? "powershell" : "bash";
+  const args = isWindows
+    ? ["-ExecutionPolicy", "Bypass", "-File", scriptPath]
+    : [scriptPath];
+
+  return await new Promise((resolvePromise) => {
+    const child = spawn(command, args, {
+      cwd: repoRoot,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: process.env
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", (error) => {
+      resolvePromise({
+        ok: false,
+        summary: error.message
+      });
+    });
+
+    child.on("close", (code) => {
+      if ((code ?? 1) !== 0) {
+        resolvePromise({
+          ok: false,
+          summary: stderr.trim() || stdout.trim() || `installer exited with code ${code ?? 1}`
+        });
+        return;
+      }
+
+      resolvePromise({
+        ok: true,
+        summary: stdout.trim() || "installed bundled OpenClaw skill"
+      });
+    });
+  });
+}
+
 function printSetupSummary(input: {
   role: NodeRole;
   networkProfile: NetworkProfileName;
@@ -492,6 +566,7 @@ function printSetupSummary(input: {
   enabledNetworks: string[];
   providerSourceSummary?: string;
   providerCheck?: ConnectionCheckResult;
+  openClawSkillInstall?: SkillInstallResult;
   walletConfigured: boolean;
   providerBackend?: FileNodeConfig["provider"] extends infer T
     ? T extends { backend: infer B }
@@ -511,6 +586,11 @@ function printSetupSummary(input: {
   if (input.providerCheck) {
     console.log(
       `- Provider connection check: ${input.providerCheck.ok ? "ready" : "not ready"} (${input.providerCheck.summary})`
+    );
+  }
+  if (input.openClawSkillInstall) {
+    console.log(
+      `- OpenClaw skill install: ${input.openClawSkillInstall.ok ? "installed" : "not installed"} (${input.openClawSkillInstall.summary})`
     );
   }
   console.log(
@@ -542,6 +622,7 @@ function printSetupSummary(input: {
       console.log(
         '- Manual OpenClaw check: openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"'
       );
+      console.log("- OpenClaw skill install (manual fallback): powershell -ExecutionPolicy Bypass -File .\\scripts\\install-openclaw-skill.ps1");
       console.log("- When jobs are processed, the running terminal will print lines like:");
       console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
     } else {

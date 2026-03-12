@@ -51,6 +51,7 @@ If you choose `OpenClaw agent` during `npm.cmd run setup`, setup will:
 - use the default agent id `main`
 - default to local execution on the current machine
 - run a quick OpenClaw connection check before saving
+- try to install the bundled Koinara OpenClaw skill automatically
 
 You only need to customize the CLI path if `openclaw` is not already available on your shell path.
 

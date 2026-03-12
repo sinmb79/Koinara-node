@@ -100,6 +100,7 @@ For most first-time operators:
 - choose `OpenClaw agent` if you want Koinara to use OpenClaw on this same computer
 - choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
 - after you choose one, setup applies the normal default local settings automatically
+- if you choose `OpenClaw agent`, setup also tries to install the bundled Koinara OpenClaw skill automatically
 
 What `network selection mode` means:
 
@@ -129,6 +130,7 @@ If you choose `OpenClaw agent` during setup:
 - it uses the normal default CLI command `openclaw`
 - it uses the default agent id `main`
 - it runs a quick OpenClaw connection check before saving the config
+- it tries to install the bundled OpenClaw skill automatically
 
 Manual OpenClaw check command:
 
