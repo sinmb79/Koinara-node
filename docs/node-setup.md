@@ -185,3 +185,5 @@ The current supported paths are:
 - the bundled Koinara OpenClaw skill under `skills/koinara-node/`
 
 If setup ends with `spawn openclaw ENOENT`, it means the skill may be installed but the OpenClaw CLI is still not available in this computer's shell path.
+
+In Windows PowerShell, prefer `openclaw.cmd` for manual checks.

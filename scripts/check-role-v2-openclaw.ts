@@ -8,14 +8,25 @@ type NodeRoleName = "provider" | "verifier";
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const [role] = process.argv.slice(2) as [NodeRoleName | undefined];
 
+function resolveEnvFile(repoRoot: string, role: NodeRoleName): string {
+  const roleSpecific = resolve(repoRoot, `.env.${role}.local`);
+  if (existsSync(roleSpecific)) {
+    return roleSpecific;
+  }
+
+  const shared = resolve(repoRoot, ".env.local");
+  if (existsSync(shared)) {
+    return shared;
+  }
+
+  fail(`Missing ${roleSpecific} and ${shared}. Run setup first.`);
+}
+
 if (role !== "provider" && role !== "verifier") {
   fail("Usage: tsx scripts/check-role-v2-openclaw.ts <provider|verifier>");
 }
 
-const envFile = resolve(repoRoot, `.env.${role}.local`);
-if (!existsSync(envFile)) {
-  fail(`Missing ${envFile}. Create it before running ${role}.`);
-}
+const envFile = resolveEnvFile(repoRoot, role);
 
 const nodeConfigFile = resolve(repoRoot, "node.config.v2-openclaw-mainnet.json");
 if (!existsSync(nodeConfigFile)) {
@@ -35,6 +46,7 @@ if (!existsSync(tsxCliPath)) {
 const sharedEnv = {
   ...process.env,
   NODE_ENV_FILE: envFile,
+  NODE_ROLE: role,
   NODE_CONFIG_FILE: nodeConfigFile,
   NODE_NETWORKS_FILE: networksFile,
   NODE_STATE_DIR: resolve(repoRoot, ".koinara-node-v2-openclaw", role)

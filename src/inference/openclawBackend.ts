@@ -18,6 +18,8 @@ type OpenClawResponse = {
   };
 };
 
+const defaultOpenClawCommand = process.platform === "win32" ? "openclaw.cmd" : "openclaw";
+
 export interface OpenClawBackendOptions {
   command?: string;
   agent?: string;
@@ -55,7 +57,7 @@ export class OpenClawBackend implements InferenceBackend {
   }
 
   private invokeAgent(prompt: string): Promise<OpenClawResponse> {
-    const command = this.options.command?.trim() || "openclaw";
+    const command = this.options.command?.trim() || defaultOpenClawCommand;
     const args = ["agent", "--agent", this.options.agent?.trim() || "main", "--json"];
 
     if (this.options.local !== false) {

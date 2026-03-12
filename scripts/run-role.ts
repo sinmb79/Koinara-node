@@ -16,6 +16,20 @@ const roleCommands: Record<RoleCommand, string[]> = {
   start: ["src/index.ts"]
 };
 
+function resolveEnvFile(repoRoot: string, role: NodeRoleName): string {
+  const roleSpecific = resolve(repoRoot, `.env.${role}.local`);
+  if (existsSync(roleSpecific)) {
+    return roleSpecific;
+  }
+
+  const shared = resolve(repoRoot, ".env.local");
+  if (existsSync(shared)) {
+    return shared;
+  }
+
+  fail(`Missing ${roleSpecific} and ${shared}. Run setup first.`);
+}
+
 if (role !== "provider" && role !== "verifier") {
   fail("Usage: tsx scripts/run-role.ts <provider|verifier> <doctor|status|once|start>");
 }
@@ -24,10 +38,7 @@ if (!command || !(command in roleCommands)) {
   fail("Usage: tsx scripts/run-role.ts <provider|verifier> <doctor|status|once|start>");
 }
 
-const envFile = resolve(repoRoot, `.env.${role}.local`);
-if (!existsSync(envFile)) {
-  fail(`Missing ${envFile}. Create it before running ${role}.`);
-}
+const envFile = resolveEnvFile(repoRoot, role);
 
 const tsxCliPath = resolve(repoRoot, "node_modules", "tsx", "dist", "cli.mjs");
 if (!existsSync(tsxCliPath)) {
@@ -41,7 +52,8 @@ const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
   stdio: "inherit",
   env: {
     ...process.env,
-    NODE_ENV_FILE: envFile
+    NODE_ENV_FILE: envFile,
+    NODE_ROLE: role
   }
 });
 

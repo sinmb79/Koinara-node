@@ -103,6 +103,7 @@ For most first-time operators:
 - choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
 - after you choose one, setup applies the normal default local settings automatically
 - if you choose `OpenClaw agent`, setup also tries to install the bundled Koinara OpenClaw skill automatically
+- on Windows PowerShell, the safer OpenClaw command is usually `openclaw.cmd`
 
 What `network selection mode` means:
 
@@ -145,7 +146,8 @@ It shows:
 If you choose `OpenClaw agent` during setup:
 
 - the node stores an OpenClaw-backed provider config
-- it uses the normal default CLI command `openclaw`
+- on Windows PowerShell it uses `openclaw.cmd`
+- on macOS / Linux it uses `openclaw`
 - it uses the default agent id `main`
 - it runs a quick OpenClaw connection check before saving the config
 - it tries to install the bundled OpenClaw skill automatically
@@ -154,7 +156,7 @@ If you choose `OpenClaw agent` during setup:
 Manual OpenClaw check command:
 
 ```powershell
-openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 ```
 
 What a good first-time result looks like after `npm.cmd run setup`:
@@ -173,16 +175,16 @@ What `Provider connection check: not ready (spawn openclaw ENOENT)` means:
 If that happens, run these in order:
 
 ```powershell
-openclaw --help
-openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+openclaw.cmd --help
+openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
 ```
 
 What those three commands tell you:
 
-- `openclaw --help`
+- `openclaw.cmd --help`
   - whether this computer can launch the OpenClaw CLI at all
-- `openclaw agent ...`
+- `openclaw.cmd agent ...`
   - whether the local OpenClaw agent actually answers
 - `npm.cmd run provider:v2:openclaw:check`
   - whether Koinara-node is configured, which epoch is active, when the next epoch closes, what recent jobs were seen, and what rewards are currently claimable

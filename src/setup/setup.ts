@@ -39,6 +39,9 @@ type OpenClawThinkingLevel = NonNullable<
   NonNullable<NonNullable<FileNodeConfig["provider"]>["openclaw"]>["thinking"]
 >;
 
+const npmRunCommand = process.platform === "win32" ? "npm.cmd run" : "npm run";
+const defaultOpenClawCommand = process.platform === "win32" ? "openclaw.cmd" : "openclaw";
+
 export async function main(): Promise<void> {
   const repoRoot = repoRootFrom(import.meta.url);
   const homeRoot = homedir();
@@ -56,7 +59,9 @@ export async function main(): Promise<void> {
 
   console.log("Setup notes:");
   console.log("- Provider mode requires one inference source: OpenClaw agent or local LLM (Ollama).");
-  console.log("- If OpenClaw is installed normally, the default command `openclaw` is usually correct.");
+  console.log(
+    `- If OpenClaw is installed normally, the default command \`${defaultOpenClawCommand}\` is usually correct.`
+  );
   console.log("- If Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct.");
   console.log("- First-time setup keeps runtime folders and polling on safe defaults unless you choose to customize them.");
   console.log("- You can skip wallet setup now and fill it later before starting the node.");
@@ -151,14 +156,14 @@ export async function main(): Promise<void> {
         }
       };
     } else {
-      const openclawCommand = undefined;
+      const openclawCommand = defaultOpenClawCommand;
       const openclawAgent = "main";
       const openclawThinking: OpenClawThinkingLevel = "low";
       const openclawTimeoutSeconds = 120;
       const openclawLocal = true;
       providerSourceSummary = "OpenClaw agent";
       console.log(
-        "Using default OpenClaw settings: command=openclaw, agent=main, local=true, thinking=low"
+        `Using default OpenClaw settings: command=${defaultOpenClawCommand}, agent=main, local=true, thinking=low`
       );
       providerCheck = await testOpenClawConnection({
         command: openclawCommand,
@@ -265,6 +270,7 @@ export async function main(): Promise<void> {
 
   console.log("Wrote node.config.json and .env.local");
   printSetupSummary({
+    repoRoot,
     role,
     networkProfile,
     selectionMode,
@@ -419,7 +425,7 @@ async function testOpenClawConnection(options: {
   timeoutSeconds: number;
   local: boolean;
 }): Promise<{ ok: true; summary: string } | { ok: false; summary: string }> {
-  const command = options.command?.trim() || "openclaw";
+  const command = options.command?.trim() || defaultOpenClawCommand;
   const args = ["agent", "--agent", options.agent.trim() || "main", "--json"];
 
   if (options.local) {
@@ -573,6 +579,7 @@ async function installOpenClawSkill(repoRoot: string): Promise<SkillInstallResul
 }
 
 function printSetupSummary(input: {
+  repoRoot: string;
   role: NodeRole;
   networkProfile: NetworkProfileName;
   selectionMode: string;
@@ -647,31 +654,37 @@ function printSetupSummary(input: {
   if (!input.walletConfigured) {
     console.log("- Add WALLET_PRIVATE_KEY or WALLET_KEYFILE to .env.local before starting the node.");
   }
-  console.log("- Check the saved config with: npm run doctor");
+  console.log(`- Check the saved config with: ${npmRunCommand} doctor`);
   if (input.role === "provider" || input.role === "both") {
     if (input.providerBackend === "openclaw") {
-      console.log("- Confirm OpenClaw CLI exists: openclaw --help");
+      console.log(`- Confirm OpenClaw CLI exists: ${defaultOpenClawCommand} --help`);
       console.log(
-        '- Confirm the local OpenClaw agent replies: openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"'
+        `- Confirm the local OpenClaw agent replies: ${defaultOpenClawCommand} agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"`
       );
-      console.log("- Provider check (connection + epoch + recent jobs + rewards): npm run provider:v2:openclaw:check");
-      console.log("- Provider start: npm run provider:v2:openclaw:start");
-      console.log("- Provider claim after epoch close: npm run provider:v2:openclaw:claim");
-      console.log("- OpenClaw skill install (manual fallback): powershell -ExecutionPolicy Bypass -File .\\scripts\\install-openclaw-skill.ps1");
+      console.log(`- Provider check (connection + epoch + recent jobs + rewards): ${npmRunCommand} provider:v2:openclaw:check`);
+      console.log(`- Provider start: ${npmRunCommand} provider:v2:openclaw:start`);
+      console.log(`- Provider claim after epoch close: ${npmRunCommand} provider:v2:openclaw:claim`);
+      console.log(
+        `- OpenClaw skill install (manual fallback): powershell -ExecutionPolicy Bypass -File ${resolve(
+          input.repoRoot,
+          "scripts",
+          "install-openclaw-skill.ps1"
+        )}`
+      );
       console.log("- When jobs are processed, the running terminal will print lines like:");
       console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
     } else {
-      console.log("- Provider connection status: npm run provider:v2:status");
-      console.log("- Provider start: npm run provider:v2:start");
-      console.log("- Provider claim after epoch close: npm run provider:v2:claim");
+      console.log(`- Provider connection status: ${npmRunCommand} provider:v2:status`);
+      console.log(`- Provider start: ${npmRunCommand} provider:v2:start`);
+      console.log(`- Provider claim after epoch close: ${npmRunCommand} provider:v2:claim`);
       console.log("- When jobs are processed, the running terminal will print lines like:");
       console.log("  worldland: provider submitted response for job <jobId> (<responseHash>)");
     }
   }
   if (input.role === "verifier" || input.role === "both") {
-    console.log("- Verifier check (connection + epoch + recent jobs + rewards): npm run verifier:v2:status");
-    console.log("- Verifier start: npm run verifier:v2:start");
-    console.log("- Verifier claim after epoch close: npm run verifier:v2:claim");
+    console.log(`- Verifier check (connection + epoch + recent jobs + rewards): ${npmRunCommand} verifier:v2:status`);
+    console.log(`- Verifier start: ${npmRunCommand} verifier:v2:start`);
+    console.log(`- Verifier claim after epoch close: ${npmRunCommand} verifier:v2:claim`);
     console.log("- When jobs are processed, the running terminal will print lines like:");
     console.log("  worldland: verifier approved job <jobId>");
     console.log("  worldland: verifier finalized PoI for job <jobId>");

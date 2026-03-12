@@ -86,7 +86,7 @@ For most first-time operators:
 - choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
 - after you choose one, setup applies the normal default local settings automatically
 - if you choose `OpenClaw agent`, setup also tries to install the bundled Koinara OpenClaw skill automatically
-- if OpenClaw is installed normally, the default command `openclaw` is usually correct
+- if OpenClaw is installed normally, the default command `openclaw.cmd` is usually correct in Windows PowerShell
 - if Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct
 
 You will also be asked for:
@@ -123,19 +123,19 @@ If you choose `OpenClaw agent` during setup:
 What that OpenClaw check result means:
 
 - `ready`
-  - the `openclaw` command was found on this computer
+  - the `openclaw.cmd` command was found on this computer
   - the local OpenClaw agent answered
   - Koinara can save a working OpenClaw-backed provider config
 - `not ready (spawn openclaw ENOENT)`
   - Koinara saved the config
   - the bundled OpenClaw skill may already be installed
-  - but this computer still cannot launch the `openclaw` command
+  - but this computer still cannot launch the `openclaw.cmd` command
   - in other words, the skill exists but the OpenClaw CLI is not ready on this PC yet
 
 Manual OpenClaw check command:
 
 ```powershell
-openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 ```
 
 If you choose `local LLM (Ollama)` during setup:
@@ -158,17 +158,17 @@ and use different `NODE_STATE_DIR` values.
 If you chose `OpenClaw agent`, run these in order:
 
 ```powershell
-openclaw --help
-openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+openclaw.cmd --help
+openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
 
 What each command is for:
 
-- `openclaw --help`
+- `openclaw.cmd --help`
   - confirms that this computer can launch the OpenClaw CLI
-- `openclaw agent ...`
+- `openclaw.cmd agent ...`
   - confirms that the local OpenClaw agent actually answers
 - `npm.cmd run provider:v2:openclaw:check`
   - confirms Koinara-node config, epoch, next epoch close, recent jobs, and claimable rewards
@@ -295,18 +295,18 @@ It means:
 
 - setup saved `node.config.json` and `.env.local`
 - the bundled OpenClaw skill may have been copied into `~/.openclaw/skills/koinara-node`
-- but this computer still cannot launch the `openclaw` command
+- but this computer still cannot launch the `openclaw.cmd` command
 
 Run these next:
 
 ```powershell
-openclaw --help
-openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+openclaw.cmd --help
+openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
 ```
 
-If `openclaw --help` fails, fix OpenClaw installation or shell path first.
-If `openclaw --help` works but `openclaw agent ...` fails, fix the local OpenClaw agent first.
+If `openclaw.cmd --help` fails, fix OpenClaw installation or shell path first.
+If `openclaw.cmd --help` works but `openclaw.cmd agent ...` fails, fix the local OpenClaw agent first.
 If both succeed, `provider:v2:openclaw:check` should become the human-readable Koinara connection snapshot.
 
 ### Repo cloned to the wrong location

@@ -17,6 +17,20 @@ const roleCommands: Record<RoleCommand, string[]> = {
   start: ["src/index.ts"]
 };
 
+function resolveEnvFile(repoRoot: string, role: NodeRoleName): string {
+  const roleSpecific = resolve(repoRoot, `.env.${role}.local`);
+  if (existsSync(roleSpecific)) {
+    return roleSpecific;
+  }
+
+  const shared = resolve(repoRoot, ".env.local");
+  if (existsSync(shared)) {
+    return shared;
+  }
+
+  fail(`Missing ${roleSpecific} and ${shared}. Run setup first.`);
+}
+
 if (role !== "provider" && role !== "verifier") {
   fail("Usage: tsx scripts/run-role-v2.ts <provider|verifier> <doctor|status|once|claim|start>");
 }
@@ -25,10 +39,7 @@ if (!command || !(command in roleCommands)) {
   fail("Usage: tsx scripts/run-role-v2.ts <provider|verifier> <doctor|status|once|claim|start>");
 }
 
-const envFile = resolve(repoRoot, `.env.${role}.local`);
-if (!existsSync(envFile)) {
-  fail(`Missing ${envFile}. Create it before running ${role}.`);
-}
+const envFile = resolveEnvFile(repoRoot, role);
 
 const nodeConfigFile = resolve(repoRoot, "node.config.v2-mainnet.json");
 if (!existsSync(nodeConfigFile)) {
@@ -55,6 +66,7 @@ const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
   env: {
     ...process.env,
     NODE_ENV_FILE: envFile,
+    NODE_ROLE: role,
     NODE_CONFIG_FILE: nodeConfigFile,
     NODE_NETWORKS_FILE: networksFile,
     NODE_STATE_DIR: resolve(repoRoot, ".koinara-node-v2", role)

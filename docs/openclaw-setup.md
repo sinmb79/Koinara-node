@@ -12,15 +12,15 @@ Use this guide when you want:
 First, make sure this computer can launch the OpenClaw CLI at all:
 
 ```powershell
-openclaw --help
+openclaw.cmd --help
 ```
 
-If that fails, do not continue yet. Koinara can save an OpenClaw-backed config, but the provider cannot become ready until the `openclaw` command exists on this computer.
+If that fails, do not continue yet. Koinara can save an OpenClaw-backed config, but the provider cannot become ready until the `openclaw.cmd` command exists on this computer.
 
 Run this first:
 
 ```powershell
-openclaw agent --agent main --local --json --message "Reply with exactly OK"
+openclaw.cmd agent --agent main --local --json --message "Reply with exactly OK"
 ```
 
 ![OpenClaw local check](./assets/openclaw-step1.svg)
@@ -29,7 +29,7 @@ Do not continue until this returns a valid JSON payload.
 
 That result proves two different things:
 
-- the `openclaw` command exists on this computer
+- the `openclaw.cmd` command exists on this computer
 - the local `main` agent actually answers
 
 ## Step 2. Install the bundled Koinara OpenClaw skill
@@ -60,7 +60,7 @@ This installs the skill into:
 If you choose `OpenClaw agent` during `npm.cmd run setup`, setup will:
 
 - enable the OpenClaw provider backend
-- use the default CLI command `openclaw`
+- use the default CLI command `openclaw.cmd` on Windows PowerShell
 - use the default agent id `main`
 - default to local execution on the current machine
 - run a quick OpenClaw connection check before saving
@@ -71,7 +71,7 @@ Important:
 - `OpenClaw skill installed`
   - means the Koinara helper skill was copied into `~/.openclaw/skills/koinara-node`
 - `OpenClaw connection ready`
-  - means the `openclaw` command exists and the local agent answered
+  - means the `openclaw.cmd` command exists and the local agent answered
 
 Those are not the same state.
 
@@ -81,7 +81,7 @@ If setup ends with `spawn openclaw ENOENT`, it means:
 - but OpenClaw CLI is still missing from this computer's shell path
 - so the provider is configured but not ready yet
 
-You only need to customize the CLI path if `openclaw` is not already available on your shell path.
+You only need to customize the CLI path if `openclaw.cmd` is not already available on your shell path.
 
 Use the dedicated Worldland v2 commands:
 
@@ -106,16 +106,16 @@ What each command is for:
 Recommended first-time order after setup:
 
 ```powershell
-openclaw --help
-openclaw agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
+openclaw.cmd --help
+openclaw.cmd agent --agent main --local --json --thinking low --timeout 120 --message "Reply with exactly OK"
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
 
 What success looks like:
 
-- `openclaw --help` prints CLI help
-- `openclaw agent ...` returns JSON
+- `openclaw.cmd --help` prints CLI help
+- `openclaw.cmd agent ...` returns JSON
 - `provider:v2:openclaw:check` shows current epoch, next epoch close, recent jobs, and reward state
 - `provider:v2:openclaw:start` stays running and prints live job activity when work arrives
 
