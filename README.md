@@ -99,7 +99,7 @@ For most first-time operators:
 
 - choose `OpenClaw agent` if you want Koinara to use OpenClaw on this same computer
 - choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
-- when setup asks whether to customize OpenClaw or Ollama settings, most users should choose `No`
+- after you choose one, setup applies the normal default local settings automatically
 
 What `network selection mode` means:
 
@@ -127,13 +127,15 @@ If you choose `OpenClaw agent` during setup:
 
 - the node stores an OpenClaw-backed provider config
 - it uses the normal default CLI command `openclaw`
-- it can run a quick OpenClaw connection check before saving the config
+- it uses the default agent id `main`
+- it runs a quick OpenClaw connection check before saving the config
 
 If you choose `local LLM (Ollama)` during setup:
 
 - the node stores an Ollama-backed provider config
 - it uses the normal default base URL `http://127.0.0.1:11434`
-- it can run a quick Ollama connection check before saving the config
+- it uses the default model `llama3.1`
+- it runs a quick Ollama connection check before saving the config
 
 What `supported job types` means:
 

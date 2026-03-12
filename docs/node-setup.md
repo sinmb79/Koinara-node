@@ -79,7 +79,7 @@ If provider mode is enabled, choose one inference source:
 - `OpenClaw agent`
 - `local LLM (Ollama)`
 
-The setup wizard treats one of these as required for provider participation.
+The setup wizard treats one of these as required for provider participation and applies the normal local defaults automatically.
 
 By default, setup now places runtime state, manifests, receipts, and artifacts under
 `~/.koinara-node` so they do not depend on where the repository was cloned.

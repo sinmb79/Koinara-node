@@ -118,39 +118,25 @@ export async function main(): Promise<void> {
     );
 
     if (backend === "ollama") {
-      const customizeOllama = await askConfirm(
-        "Customize Ollama settings now? Most users can choose No and use the default local settings.",
-        false
+      const ollamaBaseUrl = "http://127.0.0.1:11434";
+      const ollamaModel = "llama3.1";
+      console.log(
+        "Using default Ollama settings: baseUrl=http://127.0.0.1:11434, model=llama3.1"
       );
-      const ollamaBaseUrl = customizeOllama
-        ? await ask(
-            "Ollama base URL (leave the default if Ollama runs on this same computer)",
-            "http://127.0.0.1:11434"
-          )
-        : "http://127.0.0.1:11434";
-      const ollamaModel = customizeOllama
-        ? await ask("Ollama model name", "llama3.1")
-        : "llama3.1";
-      const verifyOllama = await askConfirm(
-        "Run a quick Ollama connection check now?",
-        true
-      );
-      if (verifyOllama) {
-        const check = await testOllamaConnection({
-          baseUrl: ollamaBaseUrl,
-          model: ollamaModel
-        });
-        if (check.ok) {
-          console.log(`Ollama check passed: ${check.summary}`);
-        } else {
-          console.warn(`Ollama check failed: ${check.summary}`);
-          const continueAnyway = await askConfirm(
-            "Continue setup anyway and save the Ollama config?",
-            true
-          );
-          if (!continueAnyway) {
-            throw new Error("Setup cancelled until Ollama connection is fixed.");
-          }
+      const check = await testOllamaConnection({
+        baseUrl: ollamaBaseUrl,
+        model: ollamaModel
+      });
+      if (check.ok) {
+        console.log(`Ollama check passed: ${check.summary}`);
+      } else {
+        console.warn(`Ollama check failed: ${check.summary}`);
+        const continueAnyway = await askConfirm(
+          "Continue setup anyway and save the Ollama config?",
+          true
+        );
+        if (!continueAnyway) {
+          throw new Error("Setup cancelled until Ollama connection is fixed.");
         }
       }
 
@@ -163,58 +149,31 @@ export async function main(): Promise<void> {
         }
       };
     } else {
-      const customizeOpenClaw = await askConfirm(
-        "Customize OpenClaw settings now? Most users can choose No and use the default local settings.",
-        false
+      const openclawCommand = undefined;
+      const openclawAgent = "main";
+      const openclawThinking: OpenClawThinkingLevel = "low";
+      const openclawTimeoutSeconds = 120;
+      const openclawLocal = true;
+      console.log(
+        "Using default OpenClaw settings: command=openclaw, agent=main, local=true, thinking=low"
       );
-      const openclawCommand = customizeOpenClaw
-        ? await ask(
-            "OpenClaw command or full path (leave the default if `openclaw` already works in this terminal)",
-            "openclaw"
-          )
-        : undefined;
-      const openclawAgent = customizeOpenClaw ? await ask("OpenClaw agent id", "main") : "main";
-      const openclawThinking = customizeOpenClaw
-        ? await askChoice<OpenClawThinkingLevel>(
-            "OpenClaw thinking level",
-            [
-              { value: "off", label: "off" },
-              { value: "minimal", label: "minimal" },
-              { value: "low", label: "low" },
-              { value: "medium", label: "medium" },
-              { value: "high", label: "high" }
-            ],
-            "low"
-          )
-        : "low";
-      const openclawTimeoutSeconds = customizeOpenClaw
-        ? Number(await ask("OpenClaw timeout in seconds", "120"))
-        : 120;
-      const openclawLocal = customizeOpenClaw ? await askConfirm("Run OpenClaw locally on this machine?", true) : true;
-
-      const verifyOpenClaw = await askConfirm(
-        "Run a quick OpenClaw connection check now?",
-        true
-      );
-      if (verifyOpenClaw) {
-        const check = await testOpenClawConnection({
-          command: openclawCommand,
-          agent: openclawAgent,
-          thinking: openclawThinking,
-          timeoutSeconds: openclawTimeoutSeconds,
-          local: openclawLocal
-        });
-        if (check.ok) {
-          console.log(`OpenClaw check passed: ${check.summary}`);
-        } else {
-          console.warn(`OpenClaw check failed: ${check.summary}`);
-          const continueAnyway = await askConfirm(
-            "Continue setup anyway and save the OpenClaw config?",
-            true
-          );
-          if (!continueAnyway) {
-            throw new Error("Setup cancelled until OpenClaw connection is fixed.");
-          }
+      const check = await testOpenClawConnection({
+        command: openclawCommand,
+        agent: openclawAgent,
+        thinking: openclawThinking,
+        timeoutSeconds: openclawTimeoutSeconds,
+        local: openclawLocal
+      });
+      if (check.ok) {
+        console.log(`OpenClaw check passed: ${check.summary}`);
+      } else {
+        console.warn(`OpenClaw check failed: ${check.summary}`);
+        const continueAnyway = await askConfirm(
+          "Continue setup anyway and save the OpenClaw config?",
+          true
+        );
+        if (!continueAnyway) {
+          throw new Error("Setup cancelled until OpenClaw connection is fixed.");
         }
       }
 

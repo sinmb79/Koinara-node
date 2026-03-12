@@ -75,7 +75,7 @@ For most first-time operators:
 
 - choose `OpenClaw agent` if you want Koinara to use OpenClaw on this same computer
 - choose `local LLM (Ollama)` if you want Koinara to use Ollama on this same computer
-- when setup asks whether to customize OpenClaw or Ollama settings, most users should choose `No`
+- after you choose one, setup applies the normal default local settings automatically
 - if OpenClaw is installed normally, the default command `openclaw` is usually correct
 - if Ollama is installed normally, the default URL `http://127.0.0.1:11434` is usually correct
 
@@ -107,13 +107,13 @@ If you choose `OpenClaw agent` during setup:
 - Koinara uses the normal default CLI command `openclaw`
 - the default agent id is `main`
 - the default mode is local execution on the current machine
-- setup can run a quick OpenClaw connection check before it saves the config
+- setup runs a quick OpenClaw connection check before it saves the config
 
 If you choose `local LLM (Ollama)` during setup:
 
 - Koinara uses the normal default base URL `http://127.0.0.1:11434`
 - the default local model is `llama3.1`
-- setup can run a quick Ollama connection check before it saves the config
+- setup runs a quick Ollama connection check before it saves the config
 
 If only one network is enabled, both modes behave almost the same in practice.
 
