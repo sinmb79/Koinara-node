@@ -3,6 +3,10 @@ dist/
 .koinara-node/
 .koinara-node-v2/
 .koinara-node-v2-openclaw/
+.koinara-node-v2-testnet/
+.koinara-node-v2-openclaw-testnet/
+.koinara-node-v2-base-mainnet/
+.koinara-node-v2-openclaw-base-mainnet/
 .koinara-node-v2-local/
 config/*.local.json
 .env.local

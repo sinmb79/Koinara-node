@@ -121,6 +121,37 @@ npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
 
+Base Sepolia v2 path:
+
+```powershell
+npm.cmd run openclaw:connect
+npm.cmd run provider:v2:openclaw:testnet:check
+npm.cmd run provider:v2:openclaw:testnet:start
+```
+
+If you also run a verifier for Base Sepolia:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run verifier:v2:testnet:status
+npm.cmd run verifier:v2:testnet:start
+```
+
+Base Mainnet v2 path:
+
+```powershell
+npm.cmd run provider:v2:openclaw:base:check
+npm.cmd run provider:v2:openclaw:base:start
+```
+
+If you also run a verifier for Base Mainnet:
+
+```powershell
+cd $env:USERPROFILE\koinara-node
+npm.cmd run verifier:v2:base:status
+npm.cmd run verifier:v2:base:start
+```
+
 Local LLM (Ollama) path:
 
 ```powershell
@@ -192,6 +223,18 @@ npm.cmd run provider:v2:start
 - `npm run provider:v2:openclaw:once`
 - `npm run provider:v2:openclaw:claim`
 - `npm run provider:v2:openclaw:start`
+- `npm run provider:v2:openclaw:testnet:doctor`
+- `npm run provider:v2:openclaw:testnet:check`
+- `npm run provider:v2:openclaw:testnet:status`
+- `npm run provider:v2:openclaw:testnet:once`
+- `npm run provider:v2:openclaw:testnet:claim`
+- `npm run provider:v2:openclaw:testnet:start`
+- `npm run provider:v2:openclaw:base:doctor`
+- `npm run provider:v2:openclaw:base:check`
+- `npm run provider:v2:openclaw:base:status`
+- `npm run provider:v2:openclaw:base:once`
+- `npm run provider:v2:openclaw:base:claim`
+- `npm run provider:v2:openclaw:base:start`
 - `npm run scan:export:v2`
 - `npm run verifier:doctor`
 - `npm run verifier:status`
@@ -208,6 +251,22 @@ npm.cmd run provider:v2:start
 - `npm run verifier:v2:openclaw:once`
 - `npm run verifier:v2:openclaw:claim`
 - `npm run verifier:v2:openclaw:start`
+- `npm run verifier:v2:testnet:doctor`
+- `npm run verifier:v2:testnet:status`
+- `npm run verifier:v2:testnet:once`
+- `npm run verifier:v2:testnet:claim`
+- `npm run verifier:v2:testnet:start`
+- `npm run verifier:v2:openclaw:testnet:doctor`
+- `npm run verifier:v2:openclaw:testnet:check`
+- `npm run verifier:v2:openclaw:testnet:status`
+- `npm run verifier:v2:openclaw:testnet:once`
+- `npm run verifier:v2:openclaw:testnet:claim`
+- `npm run verifier:v2:openclaw:testnet:start`
+- `npm run verifier:v2:base:doctor`
+- `npm run verifier:v2:base:status`
+- `npm run verifier:v2:base:once`
+- `npm run verifier:v2:base:claim`
+- `npm run verifier:v2:base:start`
 - `npm run test`
 
 To install Windows logon auto-start for both roles:
@@ -246,6 +305,14 @@ If you want local-only overrides without editing the tracked network profiles, c
 The tracked Worldland v2 profile is:
 
 - `config/networks.mainnet.v2.json`
+
+The tracked Base Sepolia v2 profile is:
+
+- `config/networks.testnet.v2.json`
+
+The tracked Base Mainnet v2 profile is:
+
+- `config/networks.mainnet.base.v2.json`
 
 If you want to run `provider` and `verifier` as separate processes on one machine:
 

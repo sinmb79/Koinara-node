@@ -1,0 +1,37 @@
+{
+  "networkProfile": "mainnet",
+  "selectionMode": "priority-failover",
+  "enabledNetworks": [
+    "base"
+  ],
+  "pollIntervalMs": 10000,
+  "manifestRoots": [
+    "../base/.koinara-base-v2/mainnet/network"
+  ],
+  "receiptRoots": [
+    "../base/.koinara-base-v2/mainnet/network"
+  ],
+  "artifactOutputDir": "./.koinara-node-v2-openclaw-base-mainnet/artifacts",
+  "provider": {
+    "backend": "openclaw",
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "openclaw": {
+      "agent": "main",
+      "local": true,
+      "thinking": "low",
+      "timeoutSeconds": 120
+    }
+  },
+  "verifier": {
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "supportedSchemaHashes": []
+  }
+}

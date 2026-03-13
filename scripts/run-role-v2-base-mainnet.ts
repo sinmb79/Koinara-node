@@ -2,24 +2,12 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  resolveProfileFromEnvFile,
-  resolveRoleEnvFile,
-  resolveV2NetworksFile,
-  resolveV2NodeConfigFile,
-  resolveV2Profile,
-  resolveV2StateDir
-} from "./v2-runtime-paths.js";
 
 type NodeRoleName = "provider" | "verifier";
 type RoleCommand = "doctor" | "status" | "once" | "claim" | "start";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const [role, command, requestedProfile] = process.argv.slice(2) as [
-  NodeRoleName | undefined,
-  RoleCommand | undefined,
-  string | undefined
-];
+const [role, command] = process.argv.slice(2) as [NodeRoleName | undefined, RoleCommand | undefined];
 
 const roleCommands: Record<RoleCommand, string[]> = {
   doctor: ["src/doctor.ts"],
@@ -30,18 +18,23 @@ const roleCommands: Record<RoleCommand, string[]> = {
 };
 
 if (role !== "provider" && role !== "verifier") {
-  fail("Usage: tsx scripts/run-role-v2.ts <provider|verifier> <doctor|status|once|claim|start> [testnet|mainnet]");
+  fail("Usage: tsx scripts/run-role-v2-base-mainnet.ts <provider|verifier> <doctor|status|once|claim|start>");
 }
 
 if (!command || !(command in roleCommands)) {
-  fail("Usage: tsx scripts/run-role-v2.ts <provider|verifier> <doctor|status|once|claim|start> [testnet|mainnet]");
+  fail("Usage: tsx scripts/run-role-v2-base-mainnet.ts <provider|verifier> <doctor|status|once|claim|start>");
 }
 
-const fallbackProfile = resolveV2Profile(repoRoot, requestedProfile);
-const envFile = resolveRoleEnvFile(repoRoot, role, fallbackProfile);
-const profile = resolveProfileFromEnvFile(envFile, fallbackProfile);
-const nodeConfigFile = resolveV2NodeConfigFile(repoRoot, profile, "default");
-const networksFile = resolveV2NetworksFile(repoRoot, profile);
+const envFile = resolve(repoRoot, role === "provider" ? ".env.provider.local" : ".env.verifier.local");
+const nodeConfigFile = resolve(
+  repoRoot,
+  role === "provider" ? "node.config.v2-openclaw-base-mainnet.json" : "node.config.v2-base-mainnet.json"
+);
+const networksFile = resolve(repoRoot, "config", "networks.mainnet.base.v2.json");
+const stateDir = resolve(
+  repoRoot,
+  role === "provider" ? ".koinara-node-v2-openclaw-base-mainnet/provider" : ".koinara-node-v2-base-mainnet/verifier"
+);
 
 const tsxCliPath = resolve(repoRoot, "node_modules", "tsx", "dist", "cli.mjs");
 if (!existsSync(tsxCliPath)) {
@@ -51,7 +44,7 @@ if (!existsSync(tsxCliPath)) {
 console.log(`Using ${envFile}`);
 console.log(`Using ${nodeConfigFile}`);
 console.log(`Using ${networksFile}`);
-console.log(`Using profile ${profile}`);
+console.log("Using profile mainnet (Base)");
 
 const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
   cwd: repoRoot,
@@ -62,8 +55,8 @@ const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
     NODE_ROLE: role,
     NODE_CONFIG_FILE: nodeConfigFile,
     NODE_NETWORKS_FILE: networksFile,
-    NETWORK_PROFILE: profile,
-    NODE_STATE_DIR: resolveV2StateDir(repoRoot, "default", profile, role)
+    NETWORK_PROFILE: "mainnet",
+    NODE_STATE_DIR: stateDir
   }
 });
 

@@ -1,0 +1,35 @@
+{
+  "networkProfile": "testnet",
+  "selectionMode": "priority-failover",
+  "enabledNetworks": [
+    "base"
+  ],
+  "pollIntervalMs": 10000,
+  "manifestRoots": [
+    "../base/.koinara-base-v2/network"
+  ],
+  "receiptRoots": [
+    "../base/.koinara-base-v2/network"
+  ],
+  "artifactOutputDir": "./.koinara-node-v2-testnet/artifacts",
+  "provider": {
+    "backend": "ollama",
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "ollama": {
+      "baseUrl": "http://127.0.0.1:11434",
+      "model": "llama3.1"
+    }
+  },
+  "verifier": {
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "supportedSchemaHashes": []
+  }
+}

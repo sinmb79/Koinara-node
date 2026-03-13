@@ -1,0 +1,32 @@
+{
+  "networks": [
+    {
+      "key": "base",
+      "label": "Base Mainnet (Koinara v2)",
+      "kind": "evm",
+      "enabled": true,
+      "priority": 1,
+      "networkRef": "base-mainnet-v2",
+      "rpcUrls": [
+        "https://base-rpc.publicnode.com",
+        "https://mainnet.base.org"
+      ],
+      "chainId": 8453,
+      "explorerBaseUrl": "https://basescan.org",
+      "confirmationsRequired": 3,
+      "recommendedGasBufferNative": "0.01",
+      "nativeToken": {
+        "type": "native",
+        "symbol": "ETH"
+      },
+      "contracts": {
+        "registry": "0xa5C8d1f5008f056e37548bB22D5C8d4708f0D87E",
+        "verifier": "0x48E0a3ed870768Fa0e0C3532235d382E8B5f75d4",
+        "rewardDistributor": "0x957a5a7D80b08113fab70dAc8c68e8D6d87bb3D1",
+        "token": "0xd5B93084a6C2263C52ed0C8096CB6bC235E726b5",
+        "nodeRegistry": "0xaEeF8F6D82C1a51223aAAD89de30a107b54FFce0"
+      },
+      "protocolVersion": "v2"
+    }
+  ]
+}

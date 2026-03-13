@@ -2,12 +2,24 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  resolveProfileFromEnvFile,
+  resolveRoleEnvFile,
+  resolveV2NetworksFile,
+  resolveV2NodeConfigFile,
+  resolveV2Profile,
+  resolveV2StateDir
+} from "./v2-runtime-paths.js";
 
 type NodeRoleName = "provider" | "verifier";
 type RoleCommand = "doctor" | "status" | "once" | "claim" | "start";
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const [role, command] = process.argv.slice(2) as [NodeRoleName | undefined, RoleCommand | undefined];
+const [role, command, requestedProfile] = process.argv.slice(2) as [
+  NodeRoleName | undefined,
+  RoleCommand | undefined,
+  string | undefined
+];
 
 const roleCommands: Record<RoleCommand, string[]> = {
   doctor: ["src/doctor.ts"],
@@ -17,39 +29,19 @@ const roleCommands: Record<RoleCommand, string[]> = {
   start: ["src/index.ts"]
 };
 
-function resolveEnvFile(repoRoot: string, role: NodeRoleName): string {
-  const roleSpecific = resolve(repoRoot, `.env.${role}.local`);
-  if (existsSync(roleSpecific)) {
-    return roleSpecific;
-  }
-
-  const shared = resolve(repoRoot, ".env.local");
-  if (existsSync(shared)) {
-    return shared;
-  }
-
-  fail(`Missing ${roleSpecific} and ${shared}. Run setup first.`);
-}
-
 if (role !== "provider" && role !== "verifier") {
-  fail("Usage: tsx scripts/run-role-v2-openclaw.ts <provider|verifier> <doctor|status|once|claim|start>");
+  fail("Usage: tsx scripts/run-role-v2-openclaw.ts <provider|verifier> <doctor|status|once|claim|start> [testnet|mainnet]");
 }
 
 if (!command || !(command in roleCommands)) {
-  fail("Usage: tsx scripts/run-role-v2-openclaw.ts <provider|verifier> <doctor|status|once|claim|start>");
+  fail("Usage: tsx scripts/run-role-v2-openclaw.ts <provider|verifier> <doctor|status|once|claim|start> [testnet|mainnet]");
 }
 
-const envFile = resolveEnvFile(repoRoot, role);
-
-const nodeConfigFile = resolve(repoRoot, "node.config.v2-openclaw-mainnet.json");
-if (!existsSync(nodeConfigFile)) {
-  fail(`Missing ${nodeConfigFile}. Run npm run setup first, then run npm run openclaw:connect.`);
-}
-
-const networksFile = resolve(repoRoot, "config", "networks.mainnet.v2.json");
-if (!existsSync(networksFile)) {
-  fail(`Missing ${networksFile}.`);
-}
+const fallbackProfile = resolveV2Profile(repoRoot, requestedProfile);
+const envFile = resolveRoleEnvFile(repoRoot, role, fallbackProfile);
+const profile = resolveProfileFromEnvFile(envFile, fallbackProfile);
+const nodeConfigFile = resolveV2NodeConfigFile(repoRoot, profile, "openclaw");
+const networksFile = resolveV2NetworksFile(repoRoot, profile);
 
 const tsxCliPath = resolve(repoRoot, "node_modules", "tsx", "dist", "cli.mjs");
 if (!existsSync(tsxCliPath)) {
@@ -59,6 +51,7 @@ if (!existsSync(tsxCliPath)) {
 console.log(`Using ${envFile}`);
 console.log(`Using ${nodeConfigFile}`);
 console.log(`Using ${networksFile}`);
+console.log(`Using profile ${profile}`);
 
 const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
   cwd: repoRoot,
@@ -69,7 +62,8 @@ const child = spawn(process.execPath, [tsxCliPath, ...roleCommands[command]], {
     NODE_ROLE: role,
     NODE_CONFIG_FILE: nodeConfigFile,
     NODE_NETWORKS_FILE: networksFile,
-    NODE_STATE_DIR: resolve(repoRoot, ".koinara-node-v2-openclaw", role)
+    NETWORK_PROFILE: profile,
+    NODE_STATE_DIR: resolveV2StateDir(repoRoot, "openclaw", profile, role)
   }
 });
 

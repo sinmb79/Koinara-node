@@ -141,6 +141,14 @@ function resolveNetworksPath(repoRoot: string, networkProfile: NetworkProfileNam
 }
 
 function loadEnvFiles(repoRoot: string): void {
+  const preserved = {
+    NODE_ENV_FILE: process.env.NODE_ENV_FILE,
+    NODE_ROLE: process.env.NODE_ROLE,
+    NODE_CONFIG_FILE: process.env.NODE_CONFIG_FILE,
+    NODE_NETWORKS_FILE: process.env.NODE_NETWORKS_FILE,
+    NETWORK_PROFILE: process.env.NETWORK_PROFILE,
+    NODE_STATE_DIR: process.env.NODE_STATE_DIR
+  };
   const envPath = resolve(repoRoot, ".env");
   const explicitEnvPath = process.env.NODE_ENV_FILE?.trim();
   const envLocalPath = explicitEnvPath
@@ -155,6 +163,12 @@ function loadEnvFiles(repoRoot: string): void {
   }
   if (existsSync(envLocalPath)) {
     dotenv.config({ path: envLocalPath, override: true });
+  }
+
+  for (const [key, value] of Object.entries(preserved)) {
+    if (value !== undefined) {
+      process.env[key] = value;
+    }
   }
 }
 
