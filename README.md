@@ -27,7 +27,6 @@ Worldland v2 is live and includes:
 ## Features
 
 - `provider`, `verifier`, or `both` roles
-- `ollama` and `openai` inference backends
 - built-in `openclaw` provider backend through the local OpenClaw CLI
 - a bundled OpenClaw skill package under `skills/koinara-node/`
 - direct contract interaction through `ethers v6`
@@ -57,11 +56,19 @@ npm.cmd run setup
 The first-time flow is now:
 
 1. run `setup` for the base node config
-2. connect exactly one provider inference source
-   - `npm.cmd run openclaw:connect`
-   - `npm.cmd run ollama:connect`
+2. connect `OpenClaw`
 3. run `check`
 4. run `start`
+
+The primary operator stack is now:
+
+- `Worldland` for settlement
+- `OpenClaw` for the agent / inference layer
+- `Koinara-node` for protocol execution
+
+If you operate through an OpenClaw chat window, you can hand the OpenClaw setup guide directly to the agent and tell it to complete the node connection steps for you:
+
+- [docs/openclaw-setup.md](docs/openclaw-setup.md)
 
 If you want the detailed Windows walkthrough with screenshots, use:
 
@@ -111,7 +118,7 @@ Example for a simple live Worldland setup:
 - network selection mode: `priority-failover`
 - enabled networks: `worldland`
 
-After `setup`, choose one provider path.
+After `setup`, follow the OpenClaw provider path.
 
 OpenClaw path:
 
@@ -152,14 +159,6 @@ npm.cmd run verifier:v2:base:status
 npm.cmd run verifier:v2:base:start
 ```
 
-Local LLM (Ollama) path:
-
-```powershell
-npm.cmd run ollama:connect
-npm.cmd run provider:v2:status
-npm.cmd run provider:v2:start
-```
-
 If you also run a verifier, open a second PowerShell window:
 
 ```powershell
@@ -176,13 +175,6 @@ What `openclaw:connect` does:
 - checks the OpenClaw CLI
 - checks that the local `main` agent replies
 
-What `ollama:connect` does:
-
-- configures the provider backend as `ollama`
-- writes the v2 runtime config
-- checks `http://127.0.0.1:11434`
-- checks that model `llama3.1` is present
-
 If you reboot the computer later, you do not need to install again.
 Start again from the repo folder:
 
@@ -190,14 +182,6 @@ Start again from the repo folder:
 cd $env:USERPROFILE\koinara-node
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
-```
-
-For an Ollama-backed provider after reboot:
-
-```powershell
-cd $env:USERPROFILE\koinara-node
-npm.cmd run provider:v2:status
-npm.cmd run provider:v2:start
 ```
 
 ## Commands
@@ -341,6 +325,8 @@ If you want OpenClaw to produce provider-side inference content, set:
 - `provider.backend = "openclaw"`
 - `provider.openclaw.agent = "main"` or another OpenClaw agent id
 - `provider.openclaw.local = true` for embedded local execution
+
+`Ollama` and other backends are still present in the codebase, but they are no longer the primary onboarding path for operators. The early operator path is intentionally fixed to `Worldland + OpenClaw + Koinara`.
 
 To refresh the public scan snapshot used by the Koinara website:
 

@@ -2,14 +2,32 @@
 
 This is the first-time Windows guide for a normal operator.
 
-The flow is now split into two parts:
+The primary operator path is now fixed to:
 
-1. install and set up the Koinara node
-2. connect one inference source afterward
-   - `OpenClaw`
-   - `local LLM (Ollama)`
+1. `Worldland`
+2. `OpenClaw`
+3. `Koinara-node`
 
-That means setup no longer tries to finish OpenClaw inside the same wizard.
+That means setup no longer tries to finish OpenClaw inside the same wizard. The operator installs the node first, then lets the OpenClaw-connected path finish the provider-side onboarding.
+
+## If you use OpenClaw, hand this guide to the agent
+
+You do not need to manually type every command yourself.
+
+If you already have an OpenClaw chat window, give the agent this GitHub document and tell it:
+
+```text
+Use this guide as the exact installation and connection checklist:
+https://github.com/sinmb79/Koinara-node/blob/main/docs/install-windows.md
+
+Install Koinara-node under %USERPROFILE%\koinara-node, run setup, switch the v2 runtime to the local Worldland RPC if available, run openclaw:connect, run provider:v2:openclaw:check, then run provider:v2:openclaw:start. After each stage, tell me what is connected, which RPC is being used, what the current epoch is, and when rewards become claimable.
+```
+
+The idea is simple:
+
+- the human operator approves the overall direction
+- the OpenClaw agent executes the repetitive shell work
+- `Koinara-node` remains the on-chain execution boundary
 
 ## Step 1. Clone into your user folder
 
@@ -89,9 +107,9 @@ Setup writes:
 If you skipped the wallet, that is fine.
 You can add `WALLET_PRIVATE_KEY` or `WALLET_KEYFILE` later before starting the node.
 
-## Step 3. Connect exactly one inference source
+## Step 3. Connect OpenClaw
 
-After setup, choose **one** provider path.
+After setup, follow the OpenClaw provider path.
 
 If you plan to use your own synced Worldland node instead of the public RPC, do this first:
 
@@ -104,8 +122,6 @@ That switches the Worldland v2 runtime to:
 - `http://127.0.0.1:8545`
 
 before you start the provider.
-
-### Option A. Connect OpenClaw in one step
 
 ```powershell
 npm.cmd run openclaw:connect
@@ -126,40 +142,11 @@ npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
 
-### Option B. Connect a local LLM (Ollama) in one step
-
-```powershell
-npm.cmd run ollama:connect
-```
-
-What this does:
-
-- updates the node config for an Ollama-backed provider
-- writes the v2 runtime config file
-- checks `http://127.0.0.1:11434`
-- checks whether model `llama3.1` is available
-
-If this succeeds, the next commands are:
-
-```powershell
-npm.cmd run provider:v2:status
-npm.cmd run provider:v2:start
-```
-
 ## Step 4. Check and start
-
-If you chose OpenClaw:
 
 ```powershell
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
-```
-
-If you chose Ollama:
-
-```powershell
-npm.cmd run provider:v2:status
-npm.cmd run provider:v2:start
 ```
 
 If you also run a verifier, use a second PowerShell window:
@@ -204,14 +191,6 @@ npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
 
-For an Ollama-backed provider:
-
-```powershell
-cd $env:USERPROFILE\koinara-node
-npm.cmd run provider:v2:status
-npm.cmd run provider:v2:start
-```
-
 For a verifier:
 
 ```powershell
@@ -230,12 +209,6 @@ If you use OpenClaw:
 
 ```powershell
 npm.cmd run provider:v2:openclaw:claim
-```
-
-If you use Ollama:
-
-```powershell
-npm.cmd run provider:v2:claim
 ```
 
 Verifier claim:
@@ -297,3 +270,8 @@ Copy-Item .\config\networks.mainnet.v2-local.example.json .\config\networks.main
 ```
 
 The v2 Worldland commands will then read `config/networks.mainnet.v2-local.json` automatically.
+
+### Ollama
+
+`Ollama` is no longer the primary onboarding path.
+It can return later as an advanced or later-stage option, but the early operator path is intentionally fixed to `Worldland + OpenClaw + Koinara`.

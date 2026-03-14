@@ -7,8 +7,6 @@ import { repoRootFrom } from "../config/loadConfig.js";
 import type { FileNodeConfig, NetworkProfileName, NodeRole } from "../types.js";
 
 type SetupShortcut =
-  | "provider-ollama"
-  | "provider-openai"
   | "provider-openclaw"
   | "verifier-only";
 
@@ -37,9 +35,10 @@ export async function main(): Promise<void> {
 
   console.log("Setup notes:");
   console.log("- This step saves the base Koinara node config only.");
-  console.log("- Provider inference is connected afterward with one separate command.");
+  console.log("- The primary operator path is Worldland + OpenClaw + Koinara.");
+  console.log("- Provider inference is connected afterward with one separate OpenClaw command.");
   console.log(`- OpenClaw path: ${npmRunCommand} openclaw:connect`);
-  console.log(`- Local LLM path: ${npmRunCommand} ollama:connect`);
+  console.log("- If you use OpenClaw as your operator shell, hand the OpenClaw setup guide to the agent and let it run the connection steps.");
   console.log("- First-time setup keeps runtime folders and polling on safe defaults unless you choose to customize them.");
   console.log("- You can skip wallet setup now and fill it later before starting the node.");
   console.log("");
@@ -81,10 +80,10 @@ export async function main(): Promise<void> {
   const enabledNetworks = await askMultiChoice(
     "Enabled networks",
     [
-      { value: "worldland", description: "Worldland Seoul / Gwangju profiles used by Koinara." },
-      { value: "base", description: "Base EVM network." },
-      { value: "ethereum", description: "Ethereum mainnet or testnet profile." },
-      { value: "bnb", description: "BNB Smart Chain profile." },
+      { value: "worldland", description: "Primary live path for Worldland + OpenClaw operators." },
+      { value: "base", description: "Fallback EVM path kept ready as an alternative." },
+      { value: "ethereum", description: "Advanced use only." },
+      { value: "bnb", description: "Advanced use only." },
       { value: "solana", description: "Prepared configuration only in this release." }
     ],
     defaults.enabledNetworks
@@ -169,8 +168,6 @@ function readShortcutProfile(argv: string[]): SetupShortcut | undefined {
 
   const value = argv[index + 1];
   if (
-    value === "provider-ollama" ||
-    value === "provider-openai" ||
     value === "provider-openclaw" ||
     value === "verifier-only"
   ) {
@@ -185,18 +182,10 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
   networkProfile: NetworkProfileName;
   enabledNetworks: string[];
 } {
-  if (shortcut === "provider-openai") {
-    return {
-      role: "provider",
-      networkProfile: "testnet",
-      enabledNetworks: ["worldland", "base"]
-    };
-  }
-
   if (shortcut === "provider-openclaw") {
     return {
       role: "provider",
-      networkProfile: "testnet",
+      networkProfile: "mainnet",
       enabledNetworks: ["worldland"]
     };
   }
@@ -211,7 +200,7 @@ function getShortcutDefaults(shortcut?: SetupShortcut): {
 
   return {
     role: "provider",
-    networkProfile: "testnet",
+    networkProfile: "mainnet",
     enabledNetworks: ["worldland"]
   };
 }
@@ -295,8 +284,8 @@ function printSetupSummary(input: {
   console.log("");
   console.log("Current state:");
   if (input.providerPending) {
-    console.log("- Provider mode is enabled, but the inference source is not connected yet.");
-    console.log("- Choose exactly one next: OpenClaw or local LLM (Ollama).");
+    console.log("- Provider mode is enabled, but the OpenClaw inference path is not connected yet.");
+    console.log("- The default next step is to connect OpenClaw.");
   }
   if (!input.walletConfigured) {
     console.log("- Wallet is still empty, so the node cannot send on-chain transactions until you add it.");
@@ -317,11 +306,9 @@ function printSetupSummary(input: {
   }
   if (input.providerPending) {
     console.log(`- Connect OpenClaw in one step: ${npmRunCommand} openclaw:connect`);
-    console.log(`- Or connect a local LLM in one step: ${npmRunCommand} ollama:connect`);
     console.log(`- After OpenClaw connect: ${npmRunCommand} provider:v2:openclaw:check`);
     console.log(`- After OpenClaw connect: ${npmRunCommand} provider:v2:openclaw:start`);
-    console.log(`- After Ollama connect: ${npmRunCommand} provider:v2:status`);
-    console.log(`- After Ollama connect: ${npmRunCommand} provider:v2:start`);
+    console.log("- If you operate through OpenClaw chat, give the OpenClaw setup guide to the agent and let it run these commands.");
   } else {
     console.log(`- Check the saved config with: ${npmRunCommand} doctor`);
   }

@@ -12,6 +12,23 @@ The intended flow is now:
 3. check
 4. start
 
+## If you want OpenClaw to do the setup work for you
+
+If you already operate through an OpenClaw chat window, hand this page to the agent and say:
+
+```text
+Use this guide as the exact OpenClaw connection checklist:
+https://github.com/sinmb79/Koinara-node/blob/main/docs/openclaw-setup.md
+
+From %USERPROFILE%\koinara-node, connect OpenClaw to Koinara-node, switch the Worldland v2 runtime to the local RPC path if that file exists, run provider:v2:openclaw:check, and if healthy run provider:v2:openclaw:start. After each stage, tell me the active RPC, current epoch, next epoch close time, and whether rewards are claimable yet.
+```
+
+This is now the intended operator flow:
+
+- the human operator points the agent at the right document
+- the OpenClaw agent executes the repetitive shell steps
+- `Koinara-node` keeps wallet signing and on-chain execution
+
 ## Step 1. Finish the base node setup first
 
 From the repo root:
