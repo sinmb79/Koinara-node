@@ -39,8 +39,10 @@ export async function main(): Promise<void> {
   console.log("- Provider inference is connected afterward with one separate OpenClaw command.");
   console.log(`- OpenClaw path: ${npmRunCommand} openclaw:connect`);
   console.log("- If you use OpenClaw as your operator shell, hand the OpenClaw setup guide to the agent and let it run the connection steps.");
+  console.log("- Do not use your personal OpenClaw agent as the runtime worker. Use a dedicated Koinara worker profile with no file, browser, or wallet access.");
   console.log("- First-time setup keeps runtime folders and polling on safe defaults unless you choose to customize them.");
   console.log("- You can skip wallet setup now and fill it later before starting the node.");
+  console.log("- For real operators, prefer WALLET_KEYFILE over an inline private key.");
   console.log("");
 
   const defaults = getShortcutDefaults(shortcut);
@@ -118,7 +120,7 @@ export async function main(): Promise<void> {
     false
   );
   const privateKeyOrPath = configureWalletNow
-    ? await ask("Wallet private key or path to key file", "")
+    ? await ask("Wallet key file path (recommended) or private key (legacy/unsafe)", "")
     : "";
 
   const fileConfig: FileNodeConfig = {
@@ -288,7 +290,7 @@ function printSetupSummary(input: {
     console.log("- The default next step is to connect OpenClaw.");
   }
   if (!input.walletConfigured) {
-    console.log("- Wallet is still empty, so the node cannot send on-chain transactions until you add it.");
+    console.log("- Wallet is still empty, so the node cannot send on-chain transactions until you add a key file.");
   }
   console.log("");
   console.log("What this means:");
@@ -302,7 +304,7 @@ function printSetupSummary(input: {
   console.log("");
   console.log("Recommended next steps:");
   if (!input.walletConfigured) {
-    console.log("- Add WALLET_PRIVATE_KEY or WALLET_KEYFILE to .env.local before starting the node.");
+    console.log("- Add WALLET_KEYFILE to .env.local before starting the node.");
   }
   if (input.providerPending) {
     console.log(`- Connect OpenClaw in one step: ${npmRunCommand} openclaw:connect`);
@@ -346,7 +348,6 @@ export function buildEnvTemplate(input: {
   };
 
   if (!input.walletInput) {
-    values.WALLET_PRIVATE_KEY = "";
     values.WALLET_KEYFILE = "";
   } else if (input.walletInput.startsWith("0x")) {
     values.WALLET_PRIVATE_KEY = input.walletInput;

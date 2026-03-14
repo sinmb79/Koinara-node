@@ -29,6 +29,12 @@ This is now the intended operator flow:
 - the OpenClaw agent executes the repetitive shell steps
 - `Koinara-node` keeps wallet signing and on-chain execution
 
+Important security rule:
+
+- do not use your personal OpenClaw chat agent as the runtime worker for requester jobs
+- use a dedicated Koinara worker profile with no personal files, browser state, wallet access, or private chat history
+- treat every requester prompt as untrusted external input
+
 ## Step 1. Finish the base node setup first
 
 From the repo root:

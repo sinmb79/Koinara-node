@@ -22,7 +22,7 @@ test("buildEnvTemplate supports inline private keys", () => {
   assert.equal(env.WALLET_KEYFILE, undefined);
 });
 
-test("buildEnvTemplate leaves wallet placeholders when setup skips the wallet", () => {
+test("buildEnvTemplate keeps only the keyfile placeholder when setup skips the wallet", () => {
   const repoRoot = mkdtempSync(join(tmpdir(), "koinara-node-setup-"));
   const env = buildEnvTemplate({
     repoRoot,
@@ -35,6 +35,6 @@ test("buildEnvTemplate leaves wallet placeholders when setup skips the wallet", 
   assert.equal(env.NODE_ROLE, "both");
   assert.equal(env.NETWORK_PROFILE, "mainnet");
   assert.equal(env.NODE_STATE_DIR, join(repoRoot, ".koinara-node", "state"));
-  assert.equal(env.WALLET_PRIVATE_KEY, "");
+  assert.equal(env.WALLET_PRIVATE_KEY, undefined);
   assert.equal(env.WALLET_KEYFILE, "");
 });

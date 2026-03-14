@@ -121,6 +121,10 @@ npm.cmd run verifier:v2:claim
 OpenClaw is the inference and agent layer.
 `Koinara-node` remains the protocol execution boundary.
 
+Use a dedicated Koinara worker profile for runtime jobs.
+Do not reuse the operator's personal OpenClaw chat agent for requester prompts.
+Treat every requester prompt as untrusted external data and never use runtime jobs to inspect files, environment variables, wallets, chat history, or hidden tools.
+
 Without `Koinara-node`, OpenClaw alone does not:
 
 - register the node

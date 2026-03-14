@@ -66,6 +66,13 @@ The primary operator stack is now:
 - `OpenClaw` for the agent / inference layer
 - `Koinara-node` for protocol execution
 
+Security boundary:
+
+- use a dedicated `OpenClaw` worker profile for Koinara jobs
+- do not use your personal OpenClaw chat agent as the runtime worker
+- keep the worker profile away from personal files, browser state, chat history, wallet files, and operator-only skills
+- prefer `WALLET_KEYFILE` over `WALLET_PRIVATE_KEY`
+
 If you operate through an OpenClaw chat window, you can hand the OpenClaw setup guide directly to the agent and tell it to complete the node connection steps for you:
 
 - [docs/openclaw-setup.md](docs/openclaw-setup.md)
@@ -327,6 +334,8 @@ If you want OpenClaw to produce provider-side inference content, set:
 - `provider.openclaw.local = true` for embedded local execution
 
 `Ollama` and other backends are still present in the codebase, but they are no longer the primary onboarding path for operators. The early operator path is intentionally fixed to `Worldland + OpenClaw + Koinara`.
+
+Treat every requester prompt as untrusted input. `Koinara-node` now wraps OpenClaw jobs with a restrictive worker preamble and strips most process environment variables before invoking the OpenClaw CLI, but operators should still keep the runtime worker separate from their personal OpenClaw environment.
 
 To refresh the public scan snapshot used by the Koinara website:
 

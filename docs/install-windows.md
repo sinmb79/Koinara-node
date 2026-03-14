@@ -29,6 +29,13 @@ The idea is simple:
 - the OpenClaw agent executes the repetitive shell work
 - `Koinara-node` remains the on-chain execution boundary
 
+Security rule for early operators:
+
+- do not run requester jobs through your personal OpenClaw chat agent
+- create or use a dedicated Koinara worker profile
+- keep that worker away from personal files, browser sessions, wallet files, and private notes
+- prefer `WALLET_KEYFILE` over an inline private key in `.env.local`
+
 ## Step 1. Clone into your user folder
 
 Open a fresh PowerShell window and run:
@@ -105,7 +112,7 @@ Setup writes:
 - `.env.local`
 
 If you skipped the wallet, that is fine.
-You can add `WALLET_PRIVATE_KEY` or `WALLET_KEYFILE` later before starting the node.
+You can add `WALLET_KEYFILE` later before starting the node.
 
 ## Step 3. Connect OpenClaw
 

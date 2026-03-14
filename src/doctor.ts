@@ -31,11 +31,21 @@ async function main(): Promise<void> {
   }
   if (!config.walletPrivateKey) {
     warnings.push(
-      "wallet is not configured yet; set WALLET_PRIVATE_KEY or WALLET_KEYFILE before running the node"
+      "wallet is not configured yet; set WALLET_KEYFILE before running the node"
+    );
+  }
+  if (config.walletSource === "env") {
+    warnings.push(
+      "wallet is loaded from an inline environment variable; prefer WALLET_KEYFILE so private keys are not copied into shell history or .env files"
     );
   }
   if (config.provider?.backend === "openai" && !config.openAiApiKey) {
     warnings.push("provider backend is openai but OPENAI_API_KEY is not set");
+  }
+  if (config.provider?.backend === "openclaw") {
+    warnings.push(
+      "openclaw backend should use a dedicated Koinara worker profile without personal files, chat history, or wallet/tool access"
+    );
   }
   if (config.networks.length === 0) {
     failures.push("no networks are configured");
