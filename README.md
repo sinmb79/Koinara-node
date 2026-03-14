@@ -191,6 +191,36 @@ npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
 
+## Secret Backup And Restore
+
+Operational secret files should stay outside the repository, for example under:
+
+- `C:\Users\<you>\.koinara-secrets\wallets`
+
+This repo now includes operator recovery helpers:
+
+- `scripts/backup-to-usb.ps1`
+- `scripts/restore-from-usb.ps1`
+- `scripts/verify-keys.ps1`
+
+Example backup:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\backup-to-usb.ps1 -UsbDriveLetter E:
+```
+
+Example restore:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\restore-from-usb.ps1 -BackupArchive E:\koinara-backup-YYYYMMDD-HHMMSS\koinara-secrets-YYYYMMDD-HHMMSS.7z
+```
+
+Example key verification:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\verify-keys.ps1
+```
+
 ## Commands
 
 - `npm run setup`
