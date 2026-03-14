@@ -301,10 +301,17 @@ If you want local-only overrides without editing the tracked network profiles, c
 
 - `config/networks.testnet.local.json`
 - `config/networks.mainnet.local.json`
+- `config/networks.mainnet.v2-local.json`
 
 The tracked Worldland v2 profile is:
 
 - `config/networks.mainnet.v2.json`
+
+If you run a local Worldland node with HTTP JSON-RPC on `127.0.0.1:8545`, copy:
+
+- `config/networks.mainnet.v2-local.example.json` -> `config/networks.mainnet.v2-local.json`
+
+The v2 runtime will prefer the local override automatically.
 
 The tracked Base Sepolia v2 profile is:
 

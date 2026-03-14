@@ -93,6 +93,18 @@ You can add `WALLET_PRIVATE_KEY` or `WALLET_KEYFILE` later before starting the n
 
 After setup, choose **one** provider path.
 
+If you plan to use your own synced Worldland node instead of the public RPC, do this first:
+
+```powershell
+Copy-Item .\config\networks.mainnet.v2-local.example.json .\config\networks.mainnet.v2-local.json
+```
+
+That switches the Worldland v2 runtime to:
+
+- `http://127.0.0.1:8545`
+
+before you start the provider.
+
 ### Option A. Connect OpenClaw in one step
 
 ```powershell
@@ -173,6 +185,12 @@ What success looks like:
   - next epoch close time
   - recent jobs
   - reward state
+
+If you use the local Worldland node path, also make sure:
+
+- your local `worldland.exe` is already synced enough to see the live v2 contracts
+- `eth_blockNumber` is not stuck at `0x0`
+- `net_peerCount` is above `0x0`
 
 ## Step 5. After reboot
 
@@ -263,3 +281,19 @@ npm.cmd run setup
 ```
 
 instead of plain `npm`.
+
+### You want to use a synced local Worldland node
+
+Run your local Worldland node with HTTP JSON-RPC enabled:
+
+```powershell
+& "C:\Program Files\worldland\worldland.exe" --seoul --http --http.addr 127.0.0.1 --http.port 8545 --http.api eth,net,web3 console
+```
+
+Then copy the v2 local override:
+
+```powershell
+Copy-Item .\config\networks.mainnet.v2-local.example.json .\config\networks.mainnet.v2-local.json
+```
+
+The v2 Worldland commands will then read `config/networks.mainnet.v2-local.json` automatically.

@@ -40,6 +40,14 @@ This one command does the OpenClaw-side onboarding for Koinara:
 - checks that `openclaw.cmd` exists
 - checks that the local `main` agent replies
 
+If you are using a synced local Worldland node on `127.0.0.1:8545`, copy this file before you continue:
+
+```powershell
+Copy-Item .\config\networks.mainnet.v2-local.example.json .\config\networks.mainnet.v2-local.json
+```
+
+The Worldland v2 runtime will prefer that file automatically.
+
 If the command ends with all checks ready, OpenClaw is connected to the Koinara provider path on this computer.
 
 ![OpenClaw skill install](./assets/openclaw-step2.svg)

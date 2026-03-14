@@ -73,12 +73,19 @@ export function resolveV2NetworksFile(repoRoot: string, profile: NetworkProfileN
     return resolve(repoRoot, explicit);
   }
 
-  const candidate = resolve(repoRoot, "config", `networks.${profile}.v2.json`);
-  if (existsSync(candidate)) {
-    return candidate;
+  const candidates = [
+    resolve(repoRoot, "config", `networks.${profile}.v2-local.json`),
+    resolve(repoRoot, "config", `networks.${profile}.v2.local.json`),
+    resolve(repoRoot, "config", `networks.${profile}.v2.json`)
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
   }
 
-  fail(`Missing ${candidate}. Prepare the ${profile} v2 network profile first.`);
+  fail(`Missing ${candidates.join(", ")}. Prepare the ${profile} v2 network profile first.`);
 }
 
 export function resolveV2StateDir(
