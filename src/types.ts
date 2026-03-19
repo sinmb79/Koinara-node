@@ -14,7 +14,7 @@ export type InferenceBackendName = "ollama" | "openai" | "openclaw";
 export type NetworkKind = "evm" | "solana";
 export type NetworkSelectionMode = "priority-failover" | "all-healthy";
 export type NetworkHealthStatus = "healthy" | "unhealthy" | "unsupported" | "disabled";
-export type ProtocolVersionName = "v1" | "v2";
+export type ProtocolVersionName = "v1" | "v2" | "v3";
 
 export interface ChainConfig {
   key: string;
@@ -39,6 +39,7 @@ export interface ChainConfig {
     rewardDistributor: string;
     token: string;
     nodeRegistry?: string;
+    nodeStaking?: string;
   };
   protocolVersion?: ProtocolVersionName;
   manifestRoots?: string[];
@@ -82,6 +83,7 @@ export interface NetworksProfile {
 export interface FileNodeConfig {
   role?: NodeRole;
   networkProfile: NetworkProfileName;
+  networksFile?: string;
   selectionMode: NetworkSelectionMode;
   enabledNetworks: string[];
   pollIntervalMs: number;
@@ -144,6 +146,7 @@ export interface EvmRuntimeNetworkConfig extends RuntimeNetworkConfigBase {
     rewardDistributor: string;
     token: string;
     nodeRegistry?: string;
+    nodeStaking?: string;
   };
   protocolVersion?: ProtocolVersionName;
 }
@@ -251,6 +254,7 @@ export interface VerificationRecord {
   provider: string;
   responseHash: string;
   submittedAt: bigint;
+  finalizedAt: bigint;
   approvals: bigint;
   quorum: bigint;
   validJob: boolean;

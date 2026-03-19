@@ -1,0 +1,36 @@
+{
+  "networkProfile": "mainnet",
+  "networksFile": "./config/networks.mainnet.v3.json",
+  "selectionMode": "priority-failover",
+  "enabledNetworks": [
+    "worldland"
+  ],
+  "pollIntervalMs": 30000,
+  "manifestRoots": [
+    "../worldland/.koinara-worldland-v3/network"
+  ],
+  "receiptRoots": [
+    "../worldland/.koinara-worldland-v3/network"
+  ],
+  "artifactOutputDir": "./.koinara-node-v3/artifacts",
+  "provider": {
+    "backend": "openclaw",
+    "supportedJobTypes": [
+      "Simple"
+    ],
+    "openclaw": {
+      "agent": "main",
+      "local": true,
+      "thinking": "low",
+      "timeoutSeconds": 120
+    }
+  },
+  "verifier": {
+    "supportedJobTypes": [
+      "Simple",
+      "General",
+      "Collective"
+    ],
+    "supportedSchemaHashes": []
+  }
+}

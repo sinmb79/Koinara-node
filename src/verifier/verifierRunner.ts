@@ -50,7 +50,16 @@ export async function runVerifierPass(
     if (stateName === "Accepted") {
       const submission = (await contracts.registry.getSubmission(jobId)) as OnChainSubmission;
       if (contracts.protocolVersion === "v2") {
-        await tryRecordAcceptedJobV2(activeNetwork, contracts, stateStore, scopedJobKey, jobId, submission.provider);
+        await tryRecordAcceptedJobV2(
+          activeNetwork,
+          contracts,
+          stateStore,
+          scopedJobKey,
+          jobId,
+          submission.provider
+        );
+      } else if (contracts.protocolVersion === "v3") {
+        await tryRecordAcceptedJobV3(activeNetwork, contracts, stateStore, jobId, submission.provider);
       } else {
         await tryDistributeRewards(activeNetwork, contracts, jobId, submission.provider);
       }
@@ -244,7 +253,40 @@ async function tryFinalizeAndSettle(
     return;
   }
 
+  if (contracts.protocolVersion === "v3") {
+    await tryRecordAcceptedJobV3(activeNetwork, contracts, stateStore, jobId, record.provider);
+    return;
+  }
+
   await tryDistributeRewards(activeNetwork, contracts, jobId, record.provider);
+}
+
+async function tryRecordAcceptedJobV3(
+  activeNetwork: HealthyEvmNetwork,
+  contracts: KoinaraContracts,
+  stateStore: FileStateStore,
+  jobId: number,
+  provider: string
+): Promise<void> {
+  const scopedJobKey = makeScopedJobKey(activeNetwork, jobId);
+  if (stateStore.hasVerifierAcceptedRecord(scopedJobKey)) {
+    return;
+  }
+
+  try {
+    const tx = await contracts.rewardDistributor.recordAcceptedJob(jobId, provider);
+    const receipt = await tx.wait();
+    stateStore.markVerifierAcceptedRecord(scopedJobKey, {
+      networkKey: activeNetwork.key,
+      txHash: receipt?.hash ?? tx.hash,
+      recordedAt: new Date().toISOString()
+    });
+    console.log(`${activeNetwork.key}: v3 accepted job recorded for settlement ${jobId}`);
+  } catch (error) {
+    console.warn(
+      `${activeNetwork.key}: v3 recordAcceptedJob skipped for job ${jobId}: ${formatError(error)}`
+    );
+  }
 }
 
 async function tryDistributeRewards(

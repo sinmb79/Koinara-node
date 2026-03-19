@@ -37,7 +37,7 @@ export function loadRuntimeConfig(options?: {
   const fileConfig = JSON.parse(readFileSync(nodeConfigPath, "utf8")) as FileNodeConfig;
   const networkProfile = (process.env.NETWORK_PROFILE ?? fileConfig.networkProfile) as NetworkProfileName;
   const role = (process.env.NODE_ROLE ?? fileConfig.role ?? inferRole(fileConfig)) as NodeRole;
-  const networksPath = resolveNetworksPath(repoRoot, networkProfile);
+  const networksPath = resolveNetworksPath(repoRoot, networkProfile, fileConfig.networksFile);
   const networksProfileData = JSON.parse(readFileSync(networksPath, "utf8")) as NetworksProfile;
   const walletResolution = loadWallet(repoRoot, options?.allowMissingWallet === true);
   const networks = resolveRuntimeNetworks(
@@ -101,6 +101,10 @@ function resolveRuntimeNetworks(
     );
 
     if (network.kind === "evm") {
+      if (network.protocolVersion === "v3" && network.contracts.nodeStaking) {
+        console.log(`${network.key}: v3 staking contract configured at ${network.contracts.nodeStaking}`);
+      }
+
       return {
         ...network,
         enabled: network.enabled && enabledBySelection,
@@ -126,10 +130,18 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/[\\/]+$/, "");
 }
 
-function resolveNetworksPath(repoRoot: string, networkProfile: NetworkProfileName): string {
+function resolveNetworksPath(
+  repoRoot: string,
+  networkProfile: NetworkProfileName,
+  configuredNetworksPath?: string
+): string {
   const explicitNetworksPath = process.env.NODE_NETWORKS_FILE?.trim();
   if (explicitNetworksPath) {
     return resolveMaybe(repoRoot, explicitNetworksPath);
+  }
+
+  if (configuredNetworksPath?.trim()) {
+    return resolveMaybe(repoRoot, configuredNetworksPath.trim());
   }
 
   const localOverride = resolve(repoRoot, "config", `networks.${networkProfile}.local.json`);

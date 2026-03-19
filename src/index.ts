@@ -7,6 +7,7 @@ import { runProviderPass } from "./provider/providerRunner.js";
 import { FileStateStore } from "./state/fileStateStore.js";
 import { runVerifierPass } from "./verifier/verifierRunner.js";
 import { runV2Maintenance } from "./v2/maintenance.js";
+import { runV3Maintenance } from "./v3/maintenance.js";
 
 export async function main(): Promise<void> {
   const config = loadRuntimeConfig();
@@ -74,7 +75,15 @@ async function runPasses(
       `Running pass on ${activeNetwork.label} (${activeNetwork.selectedRpcUrl}) as ${contracts.wallet.address}`
     );
 
-    await runV2Maintenance(config, activeNetwork, contracts, stateStore);
+    if (contracts.protocolVersion === "v3") {
+      const status = await runV3Maintenance(config, activeNetwork, contracts, stateStore);
+      if (status === "paused" || status === "not-staked") {
+        continue;
+      }
+    } else if (contracts.protocolVersion === "v2") {
+      await runV2Maintenance(config, activeNetwork, contracts, stateStore);
+    }
+
     if (options?.claimsOnly) {
       continue;
     }

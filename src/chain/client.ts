@@ -8,7 +8,17 @@ import type {
   OnChainSubmission,
   VerificationRecord
 } from "../types.js";
-import { nodeRegistryAbi, registryAbi, rewardDistributorAbi, tokenAbi, verifierAbi } from "./abis.js";
+import {
+  nodeRegistryAbi,
+  nodeStakingAbi,
+  registryAbi,
+  rewardDistributorV1Abi,
+  rewardDistributorV2Abi,
+  rewardDistributorV3Abi,
+  tokenAbi,
+  verifierV2Abi,
+  verifierV3Abi
+} from "./abis.js";
 
 export const jobTypeToNumber: Record<JobTypeName, number> = {
   Simple: 0,
@@ -50,6 +60,7 @@ export interface KoinaraContracts {
   rewardDistributor: Contract;
   token: Contract;
   nodeRegistry?: Contract;
+  nodeStaking?: Contract;
 }
 
 export function buildContracts(
@@ -60,18 +71,34 @@ export function buildContracts(
   const provider = new JsonRpcProvider(rpcUrl, chain.chainId || undefined);
   const wallet = new Wallet(walletPrivateKey, provider);
   const signer = new NonceManager(wallet);
+  const version: ProtocolVersionName =
+    chain.protocolVersion ??
+    (chain.contracts.nodeStaking ? "v3" : chain.contracts.nodeRegistry ? "v2" : "v1");
 
   return {
     provider,
     wallet,
-    protocolVersion: chain.protocolVersion ?? (chain.contracts.nodeRegistry ? "v2" : "v1"),
+    protocolVersion: version,
     registry: new Contract(chain.contracts.registry, registryAbi, signer),
-    verifier: new Contract(chain.contracts.verifier, verifierAbi, signer),
-    rewardDistributor: new Contract(chain.contracts.rewardDistributor, rewardDistributorAbi, signer),
+    verifier: new Contract(chain.contracts.verifier, version === "v3" ? verifierV3Abi : verifierV2Abi, signer),
+    rewardDistributor: new Contract(
+      chain.contracts.rewardDistributor,
+      version === "v3"
+        ? rewardDistributorV3Abi
+        : version === "v2"
+          ? rewardDistributorV2Abi
+          : rewardDistributorV1Abi,
+      signer
+    ),
     token: new Contract(chain.contracts.token, tokenAbi, signer),
     ...(chain.contracts.nodeRegistry
       ? {
           nodeRegistry: new Contract(chain.contracts.nodeRegistry, nodeRegistryAbi, signer)
+        }
+      : {}),
+    ...(chain.contracts.nodeStaking
+      ? {
+          nodeStaking: new Contract(chain.contracts.nodeStaking, nodeStakingAbi, signer)
         }
       : {})
   };
@@ -86,5 +113,8 @@ export function asSubmission(submission: OnChainSubmission): OnChainSubmission {
 }
 
 export function asRecord(record: VerificationRecord): VerificationRecord {
-  return record;
+  return {
+    ...record,
+    finalizedAt: typeof record.finalizedAt === "bigint" ? record.finalizedAt : 0n
+  };
 }
