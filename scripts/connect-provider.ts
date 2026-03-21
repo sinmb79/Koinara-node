@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defaultOpenClawCommand, resolveOpenClawInvocation } from "../src/inference/openclawCli.js";
+import { resolveRuntimeCommands } from "../src/config/runtimeCommands.js";
 import type { FileNodeConfig, JobTypeName, NodeRole } from "../src/types.js";
 import { installOpenClawSkill } from "./install-openclaw-skill.js";
 
@@ -58,6 +59,15 @@ if (backend === "openclaw") {
 }
 console.log("");
 
+const providerCommands = resolveRuntimeCommands({
+  role: "provider",
+  config: mergedConfig
+});
+const verifierCommands = resolveRuntimeCommands({
+  role: "verifier",
+  config: mergedConfig
+});
+
 if (backend === "openclaw") {
   const skillTarget = installOpenClawSkill(repoRoot);
   console.log(`Installed OpenClaw skill: ${skillTarget}`);
@@ -94,15 +104,18 @@ if (backend === "openclaw") {
   console.log(`- Local agent: ${formatCheck(normalizedAgentCheck)}`);
   console.log("");
   console.log("Next commands:");
-  console.log(`- ${npmRunCommand} provider:v2:openclaw:check`);
-  console.log(`- ${npmRunCommand} provider:v2:openclaw:start`);
-  console.log(`- ${npmRunCommand} verifier:v2:status`);
-  console.log(`- ${npmRunCommand} verifier:v2:start`);
+  if (providerCommands.check) {
+    console.log(`- ${npmRunCommand} ${providerCommands.check}`);
+  }
+  console.log(`- ${npmRunCommand} ${providerCommands.start}`);
+  console.log(`- ${npmRunCommand} ${verifierCommands.status}`);
+  console.log(`- ${npmRunCommand} ${verifierCommands.start}`);
   console.log("");
   console.log("What this means:");
   console.log("- Node setup is complete.");
   console.log("- OpenClaw is now the configured provider inference source.");
   console.log("- If OpenClaw was already running, restart it or reload skills once to pick up the Koinara skill.");
+  console.log("- Keep the start command running across epoch boundaries, or install Windows autostart.");
   console.log("- If the local agent check failed, OpenClaw itself still needs attention before the provider can run.");
 } else {
   const ollamaCheck = await testOllamaConnection("http://127.0.0.1:11434", "llama3.1");
@@ -110,10 +123,10 @@ if (backend === "openclaw") {
   console.log(`- Local Ollama: ${formatCheck(ollamaCheck)}`);
   console.log("");
   console.log("Next commands:");
-  console.log(`- ${npmRunCommand} provider:v2:status`);
-  console.log(`- ${npmRunCommand} provider:v2:start`);
-  console.log(`- ${npmRunCommand} verifier:v2:status`);
-  console.log(`- ${npmRunCommand} verifier:v2:start`);
+  console.log(`- ${npmRunCommand} ${providerCommands.status}`);
+  console.log(`- ${npmRunCommand} ${providerCommands.start}`);
+  console.log(`- ${npmRunCommand} ${verifierCommands.status}`);
+  console.log(`- ${npmRunCommand} ${verifierCommands.start}`);
 }
 
 function inferRole(config: FileNodeConfig): NodeRole {

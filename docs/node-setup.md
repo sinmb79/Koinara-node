@@ -135,6 +135,9 @@ Use `provider:v2:openclaw:check` as the first human-readable status snapshot. It
 - recent jobs
 - reward state
 
+`provider:v2:openclaw:check` does not keep heartbeats alive.
+Only `provider:v2:openclaw:start` continues registration and heartbeat work across epoch boundaries.
+
 If you want both roles to start automatically when you log into Windows:
 
 ```powershell
@@ -145,6 +148,9 @@ This creates two scheduled tasks:
 
 - `Koinara Provider Autostart`
 - `Koinara Verifier Autostart`
+
+The launcher resolves the matching v2 runtime command from the current repo config at logon time.
+If your tasks still point at an older repo path, rerun the installer once so Windows rewrites them.
 
 ## Verify Participation
 

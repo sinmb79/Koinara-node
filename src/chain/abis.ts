@@ -24,6 +24,7 @@ export const rewardDistributorAbi = [
   "function activeEpochEmission(uint256 epoch) view returns (uint256)",
   "function workEpochEmission(uint256 epoch) view returns (uint256)",
   "function epochAcceptedWeight(uint256 epoch) view returns (uint256)",
+  "function activeRewardClaimed(uint256 epoch, address node) view returns (bool)",
   "function calculateJobReward(uint256 jobId) view returns (uint256)",
   "function getRewardBreakdown(uint256 jobId) view returns (uint256 totalReward, uint256 providerReward, uint256 verifierRewardTotal)",
   "function recordAcceptedJob(uint256 jobId, address provider)",

@@ -109,22 +109,26 @@ Koinara-node
 4. Run:
 
 ```bash
-npm run provider:v2:doctor
-npm run provider:v2:start
+npm run provider:v2:openclaw:check
+npm run provider:v2:openclaw:start
 ```
 
 5. After an epoch closes, claim with:
 
 ```bash
-npm run provider:v2:claim
+npm run provider:v2:openclaw:claim
 ```
 
 If you also run a verifier:
 
 ```bash
-npm run verifier:v2:start
-npm run verifier:v2:claim
+npm run verifier:v2:openclaw:status
+npm run verifier:v2:openclaw:start
+npm run verifier:v2:openclaw:claim
 ```
+
+`provider:v2:openclaw:check` is only a snapshot.
+Leave `provider:v2:openclaw:start` running across epoch boundaries or install Windows auto-start if you want ongoing active rewards.
 
 ## What Does Not Exist Yet
 

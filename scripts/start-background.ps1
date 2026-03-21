@@ -11,6 +11,7 @@ $runDir = Join-Path $repoRoot ".koinara-node\$Role"
 $stdoutLog = Join-Path $runDir "$Role.stdout.log"
 $stderrLog = Join-Path $runDir "$Role.stderr.log"
 $pidFile = Join-Path $runDir "$Role.pid"
+$tsxCliPath = Join-Path $repoRoot "node_modules\tsx\dist\cli.mjs"
 
 New-Item -ItemType Directory -Force -Path $runDir | Out-Null
 
@@ -43,7 +44,19 @@ Write-TraceLine -Path $stdoutLog -Message "[$((Get-Date).ToString('s'))] startin
 try {
   Push-Location $repoRoot
   $npmCmd = (Get-Command npm.cmd -ErrorAction Stop).Source
-  & $npmCmd run "$Role`:start" 1>> $stdoutLog 2>> $stderrLog
+  $nodeCmd = (Get-Command node.exe -ErrorAction Stop).Source
+  if (-not (Test-Path $tsxCliPath)) {
+    throw "Missing $tsxCliPath. Run npm install first."
+  }
+
+  $startCommand = & $nodeCmd $tsxCliPath scripts/resolve-autostart-command.ts $Role
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($startCommand)) {
+    throw "Could not resolve an autostart command for role $Role."
+  }
+
+  $startCommand = $startCommand.Trim()
+  Write-TraceLine -Path $stdoutLog -Message "[$((Get-Date).ToString('s'))] running npm run $startCommand"
+  & $npmCmd run $startCommand 1>> $stdoutLog 2>> $stderrLog
   exit $LASTEXITCODE
 } finally {
   Pop-Location

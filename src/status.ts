@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { formatEther } from "ethers";
 import { buildContracts } from "./chain/client.js";
+import { hasActiveRewardClaimed } from "./chain/claimStatus.js";
 import { inspectNetworks, selectedHealthyNetworks } from "./chain/networkSelection.js";
 import { loadRuntimeConfig } from "./config/loadConfig.js";
 import { FileStateStore } from "./state/fileStateStore.js";
@@ -104,10 +105,8 @@ async function printV2RewardStatus(
   console.log(`- Active in latest closed epoch: ${latestClosedActive ? "yes" : "no"}`);
 
   const activeClaims = await estimateActiveClaims(
-    role,
     activeNetwork,
     contracts,
-    stateStore,
     latestClosedEpoch
   );
   if (activeClaims.epochs > 0) {
@@ -144,25 +143,20 @@ async function printV2RewardStatus(
 }
 
 async function estimateActiveClaims(
-  role: "provider" | "verifier" | "both",
   activeNetwork: HealthyEvmNetwork,
   contracts: ReturnType<typeof buildContracts>,
-  stateStore: FileStateStore,
   latestClosedEpoch: number
 ): Promise<{ epochs: number; reward: bigint }> {
   let epochs = 0;
   let reward = 0n;
 
   for (let epoch = 0; epoch <= latestClosedEpoch; epoch += 1) {
-    const key = `${activeNetwork.key}:${activeNetwork.network.chainId}:${epoch}`;
-    const alreadyClaimed =
-      role === "provider"
-        ? stateStore.hasProviderActiveEpochClaim(key)
-        : role === "verifier"
-          ? stateStore.hasVerifierActiveEpochClaim(key)
-          : stateStore.hasProviderActiveEpochClaim(key) || stateStore.hasVerifierActiveEpochClaim(key);
-
-    if (alreadyClaimed) {
+    const alreadyClaimedOnChain = await hasActiveRewardClaimed(
+      contracts.rewardDistributor,
+      epoch,
+      contracts.wallet.address
+    );
+    if (alreadyClaimedOnChain) {
       continue;
     }
 

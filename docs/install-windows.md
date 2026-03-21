@@ -166,8 +166,8 @@ If you also run a verifier, use a second PowerShell window:
 
 ```powershell
 cd $env:USERPROFILE\koinara-node
-npm.cmd run verifier:v2:status
-npm.cmd run verifier:v2:start
+npm.cmd run verifier:v2:openclaw:status
+npm.cmd run verifier:v2:openclaw:start
 ```
 
 ![Step 3](./assets/install-step3.svg)
@@ -185,6 +185,11 @@ What success looks like:
   - next epoch close time
   - recent jobs
   - reward state
+
+Important:
+
+- `provider:v2:openclaw:check` is a readiness snapshot only
+- `provider:v2:openclaw:start` is the long-running loop that must keep running after Step 4 and after reboot if you want future epoch heartbeats and active rewards
 
 If you use the local Worldland node path, also make sure:
 
@@ -216,8 +221,8 @@ For a verifier:
 
 ```powershell
 cd $env:USERPROFILE\koinara-node
-npm.cmd run verifier:v2:status
-npm.cmd run verifier:v2:start
+npm.cmd run verifier:v2:openclaw:status
+npm.cmd run verifier:v2:openclaw:start
 ```
 
 ## Step 6. Claim after the current epoch closes
@@ -241,7 +246,7 @@ npm.cmd run provider:v2:claim
 Verifier claim:
 
 ```powershell
-npm.cmd run verifier:v2:claim
+npm.cmd run verifier:v2:openclaw:claim
 ```
 
 ## Troubleshooting
@@ -297,3 +302,9 @@ Copy-Item .\config\networks.mainnet.v2-local.example.json .\config\networks.main
 ```
 
 The v2 Worldland commands will then read `config/networks.mainnet.v2-local.json` automatically.
+
+If you use Windows logon auto-start, reinstall it once after moving the repository or pulling fixes that change the launcher path:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
+```

@@ -133,8 +133,8 @@ If you also run a verifier for Base Sepolia:
 
 ```powershell
 cd $env:USERPROFILE\koinara-node
-npm.cmd run verifier:v2:testnet:status
-npm.cmd run verifier:v2:testnet:start
+npm.cmd run verifier:v2:openclaw:testnet:status
+npm.cmd run verifier:v2:openclaw:testnet:start
 ```
 
 Base Mainnet v2 path:
@@ -164,8 +164,8 @@ If you also run a verifier, open a second PowerShell window:
 
 ```powershell
 cd $env:USERPROFILE\koinara-node
-npm.cmd run verifier:v2:status
-npm.cmd run verifier:v2:start
+npm.cmd run verifier:v2:openclaw:status
+npm.cmd run verifier:v2:openclaw:start
 ```
 
 What `openclaw:connect` does:
@@ -191,6 +191,9 @@ cd $env:USERPROFILE\koinara-node
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
 ```
+
+`provider:v2:openclaw:check` is only a readiness snapshot.
+`provider:v2:openclaw:start` is the long-running command that must stay alive across epoch boundaries for future heartbeats and active rewards.
 
 For an Ollama-backed provider after reboot:
 
@@ -274,6 +277,9 @@ To install Windows logon auto-start for both roles:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
 ```
+
+The launcher now resolves the matching v2 runtime command from the current repo config.
+If you moved the repository or previously installed tasks from an older repo path, run the install command again once so Windows rewrites the task target.
 
 To remove it again:
 

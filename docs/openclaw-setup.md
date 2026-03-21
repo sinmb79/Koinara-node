@@ -69,6 +69,9 @@ It shows:
 - recent jobs
 - reward state
 
+It does not keep the node active by itself.
+Treat it as a readiness snapshot, not as proof that future epoch rewards are secured.
+
 If you want the low-level OpenClaw-only check:
 
 ```powershell
@@ -97,6 +100,9 @@ This keeps:
 - OpenClaw-backed provider inference
 - on-chain provider submission
 
+If you close this process, future heartbeats stop.
+That means later epochs can miss active rewards even if `check` looked healthy earlier.
+
 When jobs are processed, the terminal prints lines like:
 
 - `worldland: provider submitted response for job <jobId> (<responseHash>)`
@@ -104,8 +110,8 @@ When jobs are processed, the terminal prints lines like:
 If you also run a verifier:
 
 ```powershell
-npm.cmd run verifier:v2:status
-npm.cmd run verifier:v2:start
+npm.cmd run verifier:v2:openclaw:status
+npm.cmd run verifier:v2:openclaw:start
 ```
 
 ![OpenClaw-backed provider flow](./assets/openclaw-step3.svg)
@@ -121,7 +127,7 @@ npm.cmd run provider:v2:openclaw:claim
 Verifier claim:
 
 ```powershell
-npm.cmd run verifier:v2:claim
+npm.cmd run verifier:v2:openclaw:claim
 ```
 
 KOIN is not minted immediately in v2.
@@ -137,6 +143,12 @@ Run:
 cd $env:USERPROFILE\koinara-node
 npm.cmd run provider:v2:openclaw:check
 npm.cmd run provider:v2:openclaw:start
+```
+
+If you rely on Windows auto-start, rerun the installer once after moving the repository or replacing an older launcher path:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-autostart.ps1
 ```
 
 ## Troubleshooting
